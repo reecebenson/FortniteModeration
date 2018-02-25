@@ -708,7 +708,7 @@ var simple_fortnite =
             ],
             "version": "0.0.1",
             "description": "Enhances the moderation of the Fortnite Discord server.",
-            "repository": "",
+            "repository": "https://github.com/reecebenson/FortniteModeration",
             "homepage": "",
             "reloadable": true
         },
@@ -795,171 +795,133 @@ var simple_fortnite =
             constructor(props) {
                 super(props);
                 this.cancelPatches = [];
-                this.weatherManId = "341251034527825921";
+                this.options = null;
+                this.optionsLink = "https://raw.githubusercontent.com/reecebenson/FortniteModeration/master/options.json";
+                //this.optionsLink = "https://pastebin.com/raw/mc2YVDiz";
             }
 
             onStart() {
+                /** Load Modules */
                 loadAllModules();
-                this.produceContextMenu();
+
+                /** Grab Menu Items */
+                this.getFileAsJson(this.optionsLink, (resp) => { this.options = resp; });
+
+                /** Generate Menu */
+                this.generateContextMenu();
 
                 return true;
             }
 
             sendMessage(channel, text) {
+                // Process text
+                text = text.replace("%weatherman%", this.options["identifiers"]["weatherman"]);             // Weatherman
+                text = text.replace("%br_squaduos_pc%", this.options["identifiers"]["br_squaduos_pc"]);     // BR PC
+                text = text.replace("%br_squaduos_ps4%", this.options["identifiers"]["br_squaduos_ps4"]);   // BR PS4
+                text = text.replace("%br_squaduos_xb1%", this.options["identifiers"]["br_squaduos_xb1"]);   // BR XB1
+                text = text.replace("%stw_squaduos_pc%", this.options["identifiers"]["stw_squaduos_pc"]);   // STW PC
+                text = text.replace("%stw_squaduos_ps4%", this.options["identifiers"]["stw_squaduos_ps4"]); // STW PS4
+                text = text.replace("%stw_squaduos_xb1%", this.options["identifiers"]["stw_squaduos_xb1"]); // STW XB1
+
+                // Send our message
                 MessageActions.sendMessage(channel.id, {content: text, invalidEmojis: [], tts: false});
             }
 
             /**
-             * ***********************************
-             * CREATE MENU
-             * ***********************************
+             * MENU BUILDER
              */
-
-            produceContextMenu() {
-                ReactComponents.get('MessageContextMenu', MessageContextMenu => {
+            generateContextMenu() {
+                ReactComponents.get("MessageContextMenu", MessageContextMenu => {
                     const cancel = Renderer.patchRender(MessageContextMenu, [
                         {
-                            selector: {
-                                type: ContextMenuItemsGroup,
-                            },
-                            method: 'prepend',
-                            content: thisObject => React.createElement(SubMenuItem, {
-                                    label: "Fortnite",
-                                    render: this.renderSubMenu(thisObject, null),
-                                    invertChildY: true
-                                })
+                            selector: { type: ContextMenuItemsGroup },
+                            method: "prepend",
+                            content: (menu) => React.createElement(SubMenuItem, {
+                                label: "Fortnite",
+                                render: this.generateMenu(menu, null, null),
+                                invertChildY: true
+                            })
                         }
                     ]);
                     this.cancelPatches.push(cancel);
                 });
             }
 
-            renderSubMenu({props: {message, channel}}, category) {
-                var elements = (() => { switch(category) {
-                    case "lfg": return [
-                        {
-                            label: "Looking for Group",
-                            action: this.onLFGClicked.bind(this, channel, message, 0)
-                        },
-                        {
-                            label: "Looking for Group - PC",
-                            action: this.onLFGClicked.bind(this, channel, message, 1)
-                        },
-                        {
-                            label: "Looking for Group - PS4",
-                            action: this.onLFGClicked.bind(this, channel, message, 2)
-                        },
-                        {
-                            label: "Looking for Group - XB1",
-                            action: this.onLFGClicked.bind(this, channel, message, 3)
-                        }
-                    ];
+            generateMenu({props: {message, channel}}, parent, category) {
+                var elements = (() => { 
+                    if(parent == null && category == null) {
+                        console.log("parent & category null");
+                        return (() => {
+                            let es = [];
 
-                    case "rules": return [
-                        {
-                            label: "Overview",
-                            action: this.onRulesClicked.bind(this, channel, message, 0)
-                        },
-                        {
-                            label: "Advertising",
-                            action: this.onRulesClicked.bind(this, channel, message, 1)
-                        },
-                        {
-                            label: "Spamming",
-                            action: this.onRulesClicked.bind(this, channel, message, 2)
-                        },
-                        {
-                            label: "Threats",
-                            action: this.onRulesClicked.bind(this, channel, message, 3)
-                        },
-                        {
-                            label: "Constructive Discussion",
-                            action: this.onRulesClicked.bind(this, channel, message, 4)
-                        },
-                        {
-                            label: "Hacking/Cheating",
-                            action: this.onRulesClicked.bind(this, channel, message, 5)
-                        },
-                        {
-                            label: "More...",
-                            render: () => this.renderSubMenu(arguments[0], "rules_more"),
-                            invertChildY: true
-                        }
-                    ];
+                            for(let key in this.options["menu"]) {
+                                let val = this.options["menu"][key];
+                                let ele = { label: key };
 
-                    case "rules_more": return [
-                        {
-                            label: "Hate Speech",
-                            action: this.onRulesClicked.bind(this, channel, message, 6)
-                        },
-                        {
-                            label: "Extreme Sexuality or Violence",
-                            action: this.onRulesClicked.bind(this, channel, message, 7)
-                        },
-                        {
-                            label: "Illegal Acts",
-                            action: this.onRulesClicked.bind(this, channel, message, 8)
-                        }
-                    ];
-                    
-                    case "replies": return [
-                        {
-                            label: "Replies Tab",
-                            action: this.onComingSoon.bind(this, channel, message)
-                        }
-                    ];
+                                if(val._subMenu)
+                                    ele.render = () => this.generateMenu(arguments[0], key, val._menuRef);
+                                else if(val._doUpdate)
+                                    ele.action = this.doUpdate.bind(this, channel, message);
+                                else
+                                ele.action = this.runResponse.bind(this, channel, message, val.response ? val.response : null, val.mention ? val.mention : null, val.exec ? val.exec : null);
 
-                    case "discord": return [
-                        {
-                            label: "Discord Tab",
-                            action: this.onComingSoon.bind(this, channel, message)
-                        }
-                    ];
-                            
-                    case "announcements": return [
-                        {
-                            label: "Announcements Tab",
-                            action: this.onComingSoon.bind(this, channel, message)
-                        }
-                    ];
-                    
-                    // MAIN MENU
-                    default: return [
-                        {
-                            label: "LFG",
-                            render: () => this.renderSubMenu(arguments[0], "lfg")
-                        },
-                        {
-                            label: "Replies",
-                            render: () => this.renderSubMenu(arguments[0], "replies"),
-                            invertChildY: true
-                        },
-                        {
-                            label: "Rules",
-                            render: () => this.renderSubMenu(arguments[0], "rules"),
-                            invertChildY: true
-                        },
-                        {
-                            label: "Discord",
-                            render: () => this.renderSubMenu(arguments[0], "discord"),
-                            invertChildY: true
-                        },
-                        {
-                            label: "Announcements",
-                            render: () => this.renderSubMenu(arguments[0], "announcements"),
-                            invertChildY: true
-                        },
-                        {
-                            label: "Check for Update",
-                            danger: true
-                        }
-                    ];
-                }})();
+                                if(val._danger)
+                                    ele.danger = true;
 
-                let ret = elements.map(e => { console.log(e); return React.createElement(e.render ? SubMenuItem : ContextMenuItem, e); });
-                return ret;
+                                if(val._flipY)
+                                    ele.invertChildY = true;
+                                
+                                es.push(ele);
+                            }
+
+                            return es;
+                        })();
+                    } else {
+                        return (() => {
+                            let es = [];
+                            for(let key in this.options["menu"][parent]["inner"]) {
+                                let val = this.options["menu"][parent]["inner"][key];
+                                let ele = { label: val.label };
+
+                                // Set Action
+                                if(val._subMenu)
+                                    ele.render = () => this.generateMenu(arguments[0], parent, val._menuRef);
+                                else if(val._doUpdate)
+                                    ele.action = this.doUpdate.bind(this, channel, message);
+                                else
+                                    ele.action = this.runResponse.bind(this, channel, message, val.response ? val.response : null, val.mention ? val.mention : null, val.exec ? val.exec : null);
+                                        
+                                // Danger
+                                if(val._danger)
+                                    ele.danger = true;
+
+                                // Flip Y
+                                if(val._flipY)
+                                    ele.invertChildY = true;
+
+                                es.push(ele);
+                            }
+                            return es;
+                        })();
+                    }
+                })();
+
+                return elements.map(e => React.createElement(e.render ? SubMenuItem : ContextMenuItem, e));
             }
 
+            runResponse(channel, message, response, mention, exec, element) {
+                // Close Menu
+                this.closeMenu(element);
+
+                // Are we executing a command?
+                if(exec) this.processCommand(channel, exec);
+
+                // Are we sending a response?
+                if(response) {
+                    let authorId = message.author.id;
+                    this.sendMessage(channel, `${(mention?"<@!"+authorId+">, ":"")}${response}`);
+                }
+            }
             /**
              * ***********************************
              * MENU FUNCTIONALITY
@@ -972,107 +934,15 @@ var simple_fortnite =
                 ContextMenuActions.close();
             }
 
-            async setChatInput(text) {
-                let textarea = document.querySelector(".chat textarea");
-                await getOwnerInstance(textarea, {include: ["ChannelTextAreaForm"]}).setState({
-                    textValue: text
-                });
-            }
-
             async processCommand(channel, cmd) {
                 await this.sendMessage(channel, cmd);
             }
 
-            // LFG
-            async onLFGClicked(c, m, i, e) {
+            doUpdate(c, m, e) {
                 this.closeMenu(e);
 
-                let lfgChannels = {
-                    "br_squaduos_pc": "362236453771804683",
-                    "br_squaduos_ps4": "362676778642178049",
-                    "br_squaduos_xb1": "362676808975646732",
-
-                    "stw_squaduos_pc": "322852071051231242",
-                    "stw_squaduos_ps4": "362676713592717314",
-                    "stw_squaduos_xb1": "362676802642247690"
-                };
-
-                let lfgs = [
-                    /* 0 - LFG */
-                    "Please use the Looking-for-Group (LFG) channels provided by <@!" + this.weatherManId + ">.",
-
-                    /* 1 - LFG PC */
-                    "Please use the Looking-for-Group (LFG) channels: <#" + lfgChannels["br_squaduos_pc"] + "> - <#" + lfgChannels["stw_squaduos_pc"] + ">",
-                    
-                    /* 2 - LFG PC */
-                    "Please use the Looking-for-Group (LFG) channels: <#" + lfgChannels["br_squaduos_ps4"] + "> - <#" + lfgChannels["stw_squaduos_ps4"] + ">",
-                    
-                    /* 3 - LFG PC */
-                    "Please use the Looking-for-Group (LFG) channels: <#" + lfgChannels["br_squaduos_xb1"] + "> - <#" + lfgChannels["stw_squaduos_xb1"] + ">"
-                ];
-                
-                // Send Weatherman LFG Command
-                if(i == 0) await this.processCommand(c, "!lfg");
-
-                // Set chat input
-                let authorId = m.author.id;
-                this.sendMessage(c, `<@!${authorId}>, ${lfgs[i]}`);
-                /*await this.setChatInput(`<@!${authorId}>, ${lfgs[i]}`);*/
-            }
-
-            // RULES
-            async onRulesClicked(c, m, i, e) {
-                this.closeMenu(e);
-
-                let rules = [
-                    /* 0 - Overview */
-                    "We want all members of this server to openly discuss all aspects of the game while building relationships with fellow community members. "
-                    + "That being said, we still need rules in place to make sure we maintain civil discussion on the server.",
-
-                    /* 1 - Advertising */
-                    "This is not the place to promote or sell your product or service. Posts attempting to solicit anything and everything will be removed. Repeat offenders will be banned. This includes but is not limited to:"
-                    + "- Advertising services offered by you, another individual or companies."
-                    + "- Advertising for product sales of any and all kinds.",
-
-                    /* 2 - Spamming */
-                    "Please do not post the same content in multiple channels. On a few occasions it may make sense to cross-post, but if we find it not to be appropriate the posts will be removed.",
-
-                    /* 3 - Threats */
-                    "We will not tolerate making threats. We will assess each instance, should they arrive, on a case-by-case basis. All posts with this type of behavior will be removed and in extreme cases we will contact the appropriate authorities.",
-
-                    /* 4 - Constructive Discussion */
-                    "Keep comments and discussion constructive. Disagreements can and will happen, however we will not tolerate posts that are severely out of line. "
-                    + "Comments or posts that are extremely offensive, attack an individual or group, or are not relevant to a topic will be deleted.",
-
-                    /* 5 - Hacking/Cheating */
-                    "We do not allow the distribution of links or information related to illegal software. We will be removing all posts that contain links or how-tos on this information. "
-                    + "Repeat offenders will be banned and in some circumstances, we'll escalate the penalty. Moderators will be on the lookout for:\n"
-                    + "- Links to pirated content (movies, software, music, games)\n"
-                    + "- Links to download software that provides an unfair advantage in-game",
-
-                    /* 6 - Hate Speech */
-                    "We will not tolerate attacks on any person or group of people on the basis of gender, religion, race, ethnicity, or sexual orientation. "
-                    + "Posts that contain any form of hate speech will be immediately removed and the user banned",
-
-                    /* 7 - Extreme Sexuality or Violence */
-                    "Please be mindful that players of all ages play games and interact on discord. That means that we want our community to be a safe environment for children. "
-                    + "We do not want any nudity or extreme, real life gore posted here. If you feel that something may be a risk to post, avoid posting that content! "
-                    + "Violators will be dealt with in the harshest of penalties which can include losing your in-game account. DO NOT POST:\n"
-                    + "- Pornographic content of any form\n"
-                    + "- Real life depictions of gore, death, or extreme violent acts",
-
-                    /* 8 - Illegal Acts */
-                    "Please do not utilize this server as a haven to discuss criminal activity. Any posts indicating criminal activity will be sent to the appropriate authorities."
-                ];
-
-                // Set chat input
-                let authorId = m.author.id;
-                this.sendMessage(c, `<@!${authorId}>, ${rules[i]}`);
-            }
-
-            onComingSoon(c, m, e) {
-                this.closeMenu(e);
-                console.log("Coming soon :\)");
+                // Update
+                this.getFileAsJson(this.optionsLink, (resp) => { this.options = resp; });
             }
 
             cancelAllPatches() {
@@ -1085,25 +955,12 @@ var simple_fortnite =
                 return true;
             }
 
-            checkUpdate(updateLink) {
-                let updateLink = "https://raw.githubusercontent.com/reecebenson/FortniteModeration/master/options.json"
+            getFileAsJson(fileLink, callback) {
                 let request = require("request");
-                request(updateLink, (error, response, result) => {
-                    if (error) return;
-                    var remoteVersion = result.match(/['"][0-9]+\.[0-9]+\.[0-9]+['"]/i);
-                    if (!remoteVersion) return;
-                    remoteVersion = remoteVersion.toString().replace(/['"]/g, "");
-                    var ver = remoteVersion.split(".").map((e) => {return parseInt(e);});
-                    var lver = window.PluginUpdates.plugins[updateLink].version.split(".").map((e) => {return parseInt(e);});
-                    var hasUpdate = false;
-                    if (ver[0] > lver[0]) hasUpdate = true;
-                    else if (ver[0] == lver[0] && ver[1] > lver[1]) hasUpdate = true;
-                    else if (ver[0] == lver[0] && ver[1] == lver[1] && ver[2] > lver[2]) hasUpdate = true;
-                    else hasUpdate = false;
-                    if (hasUpdate) PluginUpdateUtilities.showUpdateNotice(pluginName, updateLink);
-                    else PluginUpdateUtilities.removeUpdateNotice(pluginName);
+                request(fileLink, function(err, resp, body) {
+                    callback(JSON.parse(body));
                 });
-            };
+            }
         }
 
         return SimpleFortnite;

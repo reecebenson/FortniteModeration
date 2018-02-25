@@ -1,0 +1,100 @@
+{
+    "info": {
+        "name": "SimpleFornite",
+        "authors": [
+            "Simple#0001",
+            "samogot",
+            "square#3880"
+        ],
+        "version": "0.0.1",
+        "description": "Enhances the moderation of the Fortnite Discord server.",
+        "repository": "",
+        "homepage": "",
+        "reloadable": true
+    },
+
+    "identifiers": {
+        "weatherman": "341251034527825921",
+        
+        "br_squaduos_pc": "362236453771804683",
+        "br_squaduos_ps4": "362676778642178049",
+        "br_squaduos_xb1": "362676808975646732",
+
+        "stw_squaduos_pc": "322852071051231242",
+        "stw_squaduos_ps4": "362676713592717314",
+        "stw_squaduos_xb1": "362676802642247690"
+    },
+
+    "menu": {
+        "LFG": {
+            "_subMenu": true,
+            "_flipY": false,
+            "_menuRef": "lfg",
+
+            "label": "LFG",
+            "inner": [
+                {
+                    "label": "Looking for Group",
+                    "response": "Please use the Looking-for-Group (LFG) channels provided by <@!%weatherman%>.",
+                    "exec": "!lfg"
+                },
+                {
+                    "label": "Looking for Group - PC",
+                    "response": "Please use the Looking-for-Group (LFG) channels: <#%br_squaduos_pc%> - <#%stw_squaduos_pc>."
+                },
+                {
+                    "label": "Looking for Group - PS4",
+                    "response": "Please use the Looking-for-Group (LFG) channels: <#%br_squaduos_ps4%> - <#%stw_squaduos_ps4>."
+                },
+                {
+                    "label": "Looking for Group - XB1",
+                    "response": "Please use the Looking-for-Group (LFG) channels: <#%br_squaduos_xb1%> - <#%stw_squaduos_xb1>."
+                }
+            ]
+        },
+
+        "Replies": {
+            "_subMenu": true,
+            "_flipY": true,
+            "_menuRef": "replies",
+
+            "label": "Replies",
+            "inner": [
+
+            ]
+        },
+        
+        "Rules": {
+            "_subMenu": true,
+            "_flipY": true,
+            "_menuRef": "rules",
+
+            "label": "Rules",
+            "inner": [
+                
+            ]
+        },
+                
+        "Discord": {
+            "_subMenu": true,
+            "_flipY": true,
+            "_menuRef": "discord",
+
+            "label": "Discord",
+            "inner": [
+                
+            ]
+        },
+        
+        "Announcements": {
+            "_subMenu": true,
+            "_flipY": true,
+            "_menuRef": "announcements",
+
+            "label": "Announcements",
+            "inner": [
+                
+            ]
+        }
+    }
+}

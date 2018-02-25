@@ -706,7 +706,7 @@ var simple_fortnite =
                 "samogot",
                 "square#3880"
             ],
-            "version": "0.0.1",
+            "version": "1.0.0",
             "description": "Enhances the moderation of the Fortnite Discord server.",
             "repository": "https://github.com/reecebenson/FortniteModeration",
             "homepage": "",
@@ -795,7 +795,6 @@ var simple_fortnite =
             constructor(props) {
                 super(props);
                 this.cancelPatches = [];
-                //this.version = "0.0.1";
                 this.options = null;
                 this.optionsLink = "https://raw.githubusercontent.com/reecebenson/FortniteModeration/master/options.json";
             }

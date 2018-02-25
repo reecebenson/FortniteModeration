@@ -6,7 +6,7 @@
             "samogot",
             "square#3880"
         ],
-        "version": "0.0.2",
+        "version": "1.0.0",
         "description": "Enhances the moderation of the Fortnite Discord server."
     },
 
@@ -62,7 +62,36 @@
             "label": "Replies",
             "inner": [
                 {
-                    "label": "Placeholder"
+                    "label": "Do Not Spam",
+                    "response": "Please do not spam the chat!",
+                    "mention": true
+                },
+                {
+                    "label": "Do Not Ping Mods",
+                    "response": "Please do not ping User/Super/Any Moderators excessively :\\)"
+                },
+                {
+                    "label": "Contact Support",
+                    "response": "You'll have to contact support for that issue as we're unable to provide help here, please follow the instructions posted by <@!%weatherman%>.",
+                    "mention": true,
+                    "exec": "!support"
+                },
+                {
+                    "label": "Report a Bug",
+                    "response": "If you want to report a bug, please follow the instructions posted by <@!%weatherman%>.",
+                    "mention": true,
+                    "exec": "!bugs"
+                },
+                {
+                    "label": "Give Feedback",
+                    "response": "If you want to give feedback to developers or suggest something, please follow the instructions posted by <@!%weatherman%>.",
+                    "mention": true,
+                    "exec": "!feedback"
+                },
+                {
+                    "label": "No Freebies",
+                    "response": "Please do not ask for free items, v-bucks or anything of a related kind here. Thanks!",
+                    "mention": true
                 }
             ]
         },
@@ -121,7 +150,24 @@
             "label": "Discord",
             "inner": [
                 {
-                    "label": "Placeholder"
+                    "label": "Discord Europe",
+                    "exec": "!discord"
+                },
+                {
+                    "label": "Discord French",
+                    "exec": "!discord_fr"
+                },
+                {
+                    "label": "Discord Spanish",
+                    "exec": "!discord_es"
+                },
+                {
+                    "label": "Discord German",
+                    "exec": "!discord_de"
+                },
+                {
+                    "label": "Discord Russian",
+                    "exec": "!discord_ru"
                 }
             ]
         },

@@ -795,9 +795,9 @@ var simple_fortnite =
             constructor(props) {
                 super(props);
                 this.cancelPatches = [];
+                //this.version = "0.0.1";
                 this.options = null;
                 this.optionsLink = "https://raw.githubusercontent.com/reecebenson/FortniteModeration/master/options.json";
-                //this.optionsLink = "https://pastebin.com/raw/mc2YVDiz";
             }
 
             onStart() {
@@ -805,7 +805,7 @@ var simple_fortnite =
                 loadAllModules();
 
                 /** Grab Menu Items */
-                this.getFileAsJson(this.optionsLink, (resp) => { this.options = resp; });
+                this.doUpdate(null, null, null);
 
                 /** Generate Menu */
                 this.generateContextMenu();
@@ -815,6 +815,7 @@ var simple_fortnite =
 
             sendMessage(channel, text) {
                 // Process text
+                console.log(text);
                 text = text.replace("%weatherman%", this.options["identifiers"]["weatherman"]);             // Weatherman
                 text = text.replace("%br_squaduos_pc%", this.options["identifiers"]["br_squaduos_pc"]);     // BR PC
                 text = text.replace("%br_squaduos_ps4%", this.options["identifiers"]["br_squaduos_ps4"]);   // BR PS4
@@ -850,7 +851,6 @@ var simple_fortnite =
             generateMenu({props: {message, channel}}, parent, category) {
                 var elements = (() => { 
                     if(parent == null && category == null) {
-                        console.log("parent & category null");
                         return (() => {
                             let es = [];
 
@@ -863,11 +863,13 @@ var simple_fortnite =
                                 else if(val._doUpdate)
                                     ele.action = this.doUpdate.bind(this, channel, message);
                                 else
-                                ele.action = this.runResponse.bind(this, channel, message, val.response ? val.response : null, val.mention ? val.mention : null, val.exec ? val.exec : null);
+                                    ele.action = this.runResponse.bind(this, channel, message, val.response ? val.response : null, val.mention ? val.mention : null, val.exec ? val.exec : null);
 
+                                // Danger
                                 if(val._danger)
                                     ele.danger = true;
 
+                                // Flip Y
                                 if(val._flipY)
                                     ele.invertChildY = true;
                                 
@@ -939,10 +941,27 @@ var simple_fortnite =
             }
 
             doUpdate(c, m, e) {
-                this.closeMenu(e);
+                if(e != null)
+                    this.closeMenu(e);
 
                 // Update
-                this.getFileAsJson(this.optionsLink, (resp) => { this.options = resp; });
+                this.getFileAsJson(this.optionsLink, (resp) => {
+                    // Set our Options
+                    this.options = resp;
+                    
+                    // Version Control
+                    let optsVersion = this.options["info"]["version"];
+                    let thisVersion = this.version;
+                    if(thisVersion != optsVersion) {
+                        ModalsStack.push(function(props) { // Can't use arrow function here
+                            return React.createElement(ConfirmModal, Object.assign({
+                                title: "Updating SimpleFortnite",
+                                body: "Hey!\n\nYou tried updating SimpleFortnite, but it seems we have incompatible versions.\nIt isn't that much of an issue, but some things in your version may not function correctly.\n\nPlease ask Simplе#0001 for the latest version! :)",
+                                // confirmText: Constants.Messages.OKAY
+                            }, props));
+                        })
+                    }
+                });
             }
 
             cancelAllPatches() {

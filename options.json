@@ -3,14 +3,15 @@
         "name": "SimpleFornite",
         "authors": [
             "Simple#0001",
-            "samogot",
+            "samogot#4379",
             "square#3880"
         ],
-        "version": "1.0.0",
+        "version": "1.1.0",
         "description": "Enhances the moderation of the Fortnite Discord server."
     },
 
     "identifiers": {
+        "simple": "166705872473423872",
         "weatherman": "341251034527825921",
         
         "br_squaduos_pc": "362236453771804683",

@@ -175,7 +175,7 @@ global.simple_fortnite = (function(){
             response = null,
             mention = null,
             exec = null,
-            danger,
+            _danger: danger,
             _flipY: invertChildY
           }
         } = menu;

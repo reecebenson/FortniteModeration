@@ -1,5 +1,5 @@
 //META{"name":"simple_fortnite"}*//
-//xd
+
 /*@cc_on
 @if (@_jscript)
 
@@ -24,967 +24,262 @@
 
 @else @*/
 
-var simple_fortnite =
-/******/ (function(modules) { // webpackBootstrap
-/******/ 	// The module cache
-/******/ 	var installedModules = {};
+global.simple_fortnite = (function(){
+  "use strict";
+  var WebpackModules, ReactComponents, getOwnerInstance, React, Renderer, Filters, getInstanceFromNode;
+  var ContextMenuActions, ContextMenuItemsGroup, ContextMenuItem, SubMenuItem, MessageContextMenu, ConfirmModal, ModalsStack, MessageActions, Parser;
 
-/******/ 	// The require function
-/******/ 	function __webpack_require__(moduleId) {
-
-/******/ 		// Check if module is in cache
-/******/ 		if(installedModules[moduleId])
-/******/ 			return installedModules[moduleId].exports;
-
-/******/ 		// Create a new module (and put it into the cache)
-/******/ 		var module = installedModules[moduleId] = {
-/******/ 			exports: {},
-/******/ 			id: moduleId,
-/******/ 			loaded: false
-/******/ 		};
-
-/******/ 		// Execute the module function
-/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-
-/******/ 		// Flag the module as loaded
-/******/ 		module.loaded = true;
-
-/******/ 		// Return the exports of the module
-/******/ 		return module.exports;
-/******/ 	}
-
-
-/******/ 	// expose the modules object (__webpack_modules__)
-/******/ 	__webpack_require__.m = modules;
-
-/******/ 	// expose the module cache
-/******/ 	__webpack_require__.c = installedModules;
-
-/******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "";
-
-/******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(0);
-/******/ })
-/************************************************************************/
-/******/ ([
-/* 0 */
-/***/ (function(module, exports, __webpack_require__) {
-
-    module.exports = __webpack_require__(15);
-
-
-/***/ }),
-/* 1 */,
-/* 2 */,
-/* 3 */
-/***/ (function(module, exports) {
-
-    /**
-     * BetterDiscord Plugin Base Class
-     * Copyright (c) 2015-present Jiiks - https://jiiks.net
-     * All rights reserved.
-     * https://github.com/Jiiks/BetterDiscordApp - https://betterdiscord.net
-     *
-     * This source code is licensed under the MIT license found in the
-     * LICENSE file in the root directory of this source tree.
-    */
-    'use strict';
-
-    class Plugin {
-        constructor(props) {
-            this.props = props;
-        }
-
-        get authors() {
-            return this.props.authors;
-        }
-
-        get version() {
-            return this.props.version;
-        }
-
-        get name() {
-            return this.props.name;
-        }
-
-        get description() {
-            return this.props.description;
-        }
-
-        get reloadable() {
-            return this.props.reloadable;
-        }
-
-        get permissions() {
-            return this.props.permissions;
-        }
-
-        get storage() {
-            return this.internal.storage;
-        }
-
-        get settings() {
-            return this.storage.settings;
-        }
-
-        saveSettings() {
-            this.storage.save();
-            this.onSave(this.settings);
-        }
-
-        getSetting(id) {
-            let setting = this.storage.settings.find(setting => { return setting.id === id; });
-            if (setting && setting.value !== undefined) return setting.value;
-        }
-
-        get enabled() {
-            return this.getSetting("enabled");
-        }
+  return class SimpleFortnite {
+    getName() {
+      return "SimpleFortnite";
     }
 
-    module.exports = Plugin;
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-    /**
-     * BetterDiscord Plugin Api
-     * Copyright (c) 2015-present Jiiks - https://jiiks.net
-     * All rights reserved.
-     * https://github.com/Jiiks/BetterDiscordApp - https://betterdiscord.net
-     *
-     * This source code is licensed under the MIT license found in the
-     * LICENSE file in the root directory of this source tree.
-    */
-    'use strict';
-
-    const Logger = __webpack_require__(5);
-    const Api = __webpack_require__(6);
-
-    class PluginApi {
-        constructor(props) {
-            this.props = props;
-        }
-
-        log(message, level) {
-            Logger.log(this.props.name, message, level);
-        }
-
-        injectStyle(id, css) {
-            Api.injectStyle(id, css);
-        }
-
-        removeStyle(id) {
-            Api.removeStyle(id);
-        }
-
-        injectScript(id, script) {
-            Api.injectScript(id, script);
-        }
-
-        removeScript(id) {
-            Api.removeScript(id);
-        }
+    getDescription() {
+      return "Enhances the moderation of the Fortnite Discord server.";
     }
 
-    module.exports = PluginApi;
+    getAuthor() {
+      return [
+        "Simple#0001",
+        "samogot#4379",
+        "square#3880"
+      ].join(", ");
+    }
 
-/***/ }),
-/* 5 */
-/***/ (function(module, exports) {
+    getVersion() {
+      return "1.1.0";
+    }
 
-    /**
-     * BetterDiscord Logger Module
-     * Copyright (c) 2015-present Jiiks - https://jiiks.net
-     * All rights reserved.
-     * https://github.com/Jiiks/BetterDiscordApp - https://betterdiscord.net
-     *
-     * This source code is licensed under the MIT license found in the
-     * LICENSE file in the root directory of this source tree.
-    */
-    'use strict';
+    load() {}
 
-    class Logger {
+    start() {
+      if( !global.DiscordInternals ) {
+        return alert("Lib Discord Internals not found! Please install that utility plugin.\nSee install instructions here https://goo.gl/kQ7UMV.");
+      }
 
-        static log(moduleName, message, level = 'log') {
-            level = this.parseLevel(level);
-            console[level]('[%cBetter%cDiscord:%s] %s', 'color: #3E82E5', '', `${moduleName}${level === 'debug' ? '|DBG' : ''}`, message);
-        }
+      ({
+        WebpackModules,
+        ReactComponents,
+        getOwnerInstance,
+        React,
+        Renderer,
+        Filters
+      } = global.DiscordInternals);
+      ({getInstanceFromNode} = global.BDV2.reactDom.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactDOMComponentTree);
 
-        static logObject(moduleName, message, object, level) {
-            if (message) this.log(moduleName, message, level);
-            console.log(object);
-        }
+      this.cancels = [];
+      this.options = null;
+      this.optionsUrl = "https://raw.githubusercontent.com/reecebenson/FortniteModeration/master/options.json";
 
-        static debug(moduleName, message, level, force) {
-            if (!force) { if (!window.BetterDiscord || !window.BetterDiscord.debug) return; }
-            this.log(moduleName, message, 'debug', true);
-        }
-
-        static debugObject(moduleName, message, object, level, force) {
-            if (!force) { if (!window.BetterDiscord || !window.BetterDiscord.debug) return; }
-
-            if (message) this.debug(moduleName, message, level, force);
-            console.debug(object);
-        }
-
-        static parseLevel(level) {
-            return {
-                'log': 'log',
-                'warn': 'warn',
-                'err': 'error',
-                'error': 'error',
-                'debug': 'debug',
-                'dbg': 'debug',
-                'info': 'info'
-            }[level];
-        }
+      this.loadAllModules();
+      this.patchMessageContextMenu();
+      this.requestAndSetOptions();
 
     }
 
-    module.exports = Logger;
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports) {
-
-    module.exports = {};
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-    /**
-     * BetterDiscord Plugin Storage
-     * Copyright (c) 2015-present Jiiks - https://jiiks.net
-     * All rights reserved.
-     * https://github.com/Jiiks/BetterDiscordApp - https://betterdiscord.net
-     *
-     * This source code is licensed under the MIT license found in the
-     * LICENSE file in the root directory of this source tree.
-    */
-    'use strict';
-
-    const Utils = __webpack_require__(6);
-
-    class PluginStorage {
-        constructor(path, defaults) {
-            this.path = `${path}/settings.json`;
-            this.defaultConfig = defaults;
-            this.load();
-        }
-
-        load() {
-            this.settings = JSON.parse(JSON.stringify(this.defaultConfig));
-
-            const loadSettings = Utils.tryParse(Utils.readFileSync(this.path));
-            if (loadSettings) {
-                Object.keys(loadSettings).map(key => {
-                    this.setSetting(key, loadSettings[key]);
-                });
-            }
-
-            if (!this.getSetting('enabled')) this.setSetting('enabled', false);
-        }
-
-        save() {
-            const reduced = this.settings.reduce((result, item) => { result[item.id] = item.value; return result; }, {});
-            Utils.writeFileSync(this.path, JSON.stringify(reduced));
-        }
-
-        getSetting(id) {
-            const setting = this.settings.find(setting => setting.id === id);
-            if (!setting) return null;
-            return setting.value;
-        }
-
-        setSetting(id, value) {
-            const setting = this.settings.find(setting => setting.id === id);
-            if (!setting) {
-                this.settings.push({ id, value });
-            } else {
-                setting.value = value;
-            }
-            this.save();
-        }
-
-        setSettings(settings) {
-            this.settings = settings;
-        }
+    stop() {
+      for( let i = 0; i < this.cancels.length; i++ ) {
+        this.cancels[i]();
+      }
+      delete this.cancels;
+      delete this.options;
+      delete this.optionsUrl;
     }
 
-    module.exports = PluginStorage;
+    loadAllModules() {
+      ContextMenuActions = WebpackModules.findByUniqueProperties(['closeContextMenu']);
 
-/***/ }),
-/* 8 */,
-/* 9 */,
-/* 10 */,
-/* 11 */,
-/* 12 */,
-/* 13 */,
-/* 14 */,
-/* 15 */
-/***/ (function(module, exports, __webpack_require__) {
+      ContextMenuItemsGroup = WebpackModules.find(Filters.byCode(/itemGroup/));
+      ContextMenuItemsGroup.displayName = 'ContextMenuItemsGroup';
 
-    const v1transpile_version = 5;
+      ContextMenuItem = WebpackModules.find(Filters.byCode(/\.label\b.*\.hint\b.*\.action\b/));
+      ContextMenuItem.displayName = 'ContextMenuItem';
 
-    module.exports = class {
-        constructor() {
-            const config = __webpack_require__(16);
-            if (!window.v1transpile || window.v1transpile.version < v1transpile_version) {
-                window.v1transpile = window.v1transpile || {};
-                window.v1transpile.version = v1transpile_version;
-                window.v1transpile.Plugin = window.v1transpile.Plugin || __webpack_require__(3);
-                window.v1transpile.PluginApi = window.v1transpile.PluginApi || __webpack_require__(4);
-                window.v1transpile.PluginStorage = window.v1transpile.PluginStorage || __webpack_require__(7);
-                window.v1transpile.Settings = window.v1transpile.Settings || {
-                    /**
-                     * Create and return a new top-level settings panel
-                     * @author noodlebox
-                     * @return {jQuery}
-                     */
-                    topPanel() {
-                        return $("<form>").addClass("form").css("width", "100%");
-                    },
+      ConfirmModal = WebpackModules.find(Filters.byPrototypeFields(['handleCancel', 'handleSubmit', 'handleMinorConfirm']));
+      ConfirmModal.displayName = 'ConfirmModal';
 
-                    /**
-                     * Create and return a container for control groups
-                     * @author noodlebox
-                     * @return {jQuery}
-                     */
-                    controlGroups() {
-                        return $("<div>").addClass("control-groups");
-                    },
+      SubMenuItem = WebpackModules.findByDisplayName("SubMenuItem");
 
-                    /**
-                     * Create and return a flexible control group
-                     * @author noodlebox
-                     * @param {object} settings Settings object
-                     * @param {Element|jQuery|string} settings.label an element or something JQuery-ish or, if string, use as plain text
-                     * @return {jQuery}
-                     */
-                    controlGroup(settings) {
-                        const group = $("<div>").addClass("control-group");
+      // this became very unreliable in a recent discord update
+      /* ReactComponents.setName('MessageContextMenu',
+        Filters.byCode(/\.ContextMenuTypes\.MESSAGE_MAIN\b[\s\S]*\.ContextMenuTypes\.MESSAGE_SYSTEM\b/,
+        c => c.prototype && c.prototype.render)
+      );*/
 
-                        if (typeof settings.label === "string") {
-                            group.append($("<label>").text(settings.label));
-                        } else if (settings.label !== undefined) {
-                            group.append($("<label>").append(settings.label));
-                        }
+      ModalsStack = WebpackModules.findByUniqueProperties(['push', 'update', 'pop', 'popWithKey']);
 
-                        return group;
-                    },
+      MessageActions = WebpackModules.findByUniqueProperties(['sendMessage']);
 
-                    /**
-                     * Create and return a group of checkboxes
-                     * @author noodlebox
-                     * @param {object} settings Settings object
-                     * @param {object[]} settings.items an array of settings objects to be passed to checkbox()
-                     * @param {function(state)} settings.callback called with the current state, when it changes state is an array of boolean values
-                     * @return {jQuery}
-                     */
-                    checkboxGroup(settings) {
-                        settings = $.extend({
-                            items: [],
-                            callback: $.noop,
-                        }, settings);
+      Parser = WebpackModules.findByUniqueProperties(["parserFor", "parse"]);
+    }
 
-                        const state = settings.items.map(item => item.checked === true);
-
-                        function onClick(i, itemState) {
-                            if (settings.items[i].callback !== undefined) {
-                                settings.items[i].callback(itemState);
-                            }
-                            state[i] = itemState;
-                            settings.callback(state);
-                        }
-
-                        const group = $("<ul>").addClass("checkbox-group");
-
-                        group.append(settings.items.map(function(item, i) {
-                            return checkbox($.extend({}, item, {
-                                callback: onClick.bind(undefined, i),
-                            }));
-                        }));
-
-                        return group;
-                    },
-
-                    /**
-                     * Create and return a checkbox
-                     * @author noodlebox
-                     * @param {object} settings Settings object
-                     * @param {Element|jQuery|string} settings.label an element or something JQuery-ish or, if string, use as plain text
-                     * @param {Element|jQuery|string} settings.help an element or something JQuery-ish or, if string, use as plain text
-                     * @param {boolean} settings.checked
-                     * @param {boolean} settings.disabled
-                     * @param {function(state)} settings.callback called with the current state, when it changes state is a boolean
-                     * @return {jQuery}
-                     */
-                    checkbox(settings) {
-                        settings = $.extend({
-                            checked: false,
-                            disabled: false,
-                            callback: $.noop,
-                        }, settings);
-
-                        const input = $("<input>").attr("type", "checkbox")
-                            .prop("checked", settings.checked)
-                            .prop("disabled", settings.disabled);
-
-                        const inner = $("<div>").addClass("checkbox-inner")
-                            .append(input)
-                            .append($("<span>"));
-
-                        const outer = $("<div>").addClass("checkbox").append(inner);
-
-                        if (settings.disabled) {
-                            outer.addClass("disabled");
-                        }
-
-                        if (typeof settings.label === "string") {
-                            outer.append($("<span>").text(settings.label));
-                        } else if (settings.label !== undefined) {
-                            outer.append($("<span>").append(settings.label));
-                        }
-
-                        outer.on("click.kawaiiSettings", function() {
-                            if (!input.prop("disabled")) {
-                                const checked = !input.prop("checked");
-                                input.prop("checked", checked);
-                                settings.callback(checked);
-                            }
-                        });
-
-                        const item = $("<li>").append(outer);
-
-                        let help;
-                        if (typeof settings.help === "string") {
-                            help = $("<div>").text(settings.help);
-                        } else if (settings.help !== undefined) {
-                            help = $("<div>").append(settings.help);
-                        }
-
-                        if (help !== undefined) {
-                            help.appendTo(item)
-                                .addClass("help-text")
-                                .css("margin-top", "-3px")
-                                .css("margin-left", "27px");
-                        }
-
-                        return item;
-                    },
-
-                    /**
-                     * Create and return an input
-                     * @author samogot
-                     * @param {object} settings Settings object
-                     * @param {Element|jQuery|string} settings.label an element or something JQuery-ish or, if string, use as plain text
-                     * @param {Element|jQuery|string} settings.help an element or something JQuery-ish or, if string, use as plain text
-                     * @param {boolean} settings.value
-                     * @param {boolean} settings.disabled
-                     * @param {function(state)} settings.callback called with the current state, when it changes. state is a string
-                     * @return {jQuery}
-                     */
-                    input(settings) {
-                        settings = $.extend({
-                            value: '',
-                            disabled: false,
-                            callback: $.noop,
-                        }, settings);
-
-                        const input = $("<input>").attr("type", "text")
-                            .prop("value", settings.value)
-                            .prop("disabled", settings.disabled);
-
-                        const inner = $("<div>").addClass("input-inner")
-                            .append(input)
-                            .append($("<span>"));
-
-                        const outer = $("<div>").addClass("input").append(inner);
-
-                        if (settings.disabled) {
-                            outer.addClass("disabled");
-                        }
-
-                        if (typeof settings.label === "string") {
-                            outer.append($("<span>").text(settings.label));
-                        } else if (settings.label !== undefined) {
-                            outer.append($("<span>").append(settings.label));
-                        }
-
-                        input.on("change.kawaiiSettings", function() {
-                            if (!input.prop("disabled")) {
-                                const value = input.val();
-                                settings.callback(value);
-                            }
-                        });
-
-                        const item = $("<li>").append(outer);
-
-                        let help;
-                        if (typeof settings.help === "string") {
-                            help = $("<div>").text(settings.help);
-                        } else if (settings.help !== undefined) {
-                            help = $("<div>").append(settings.help);
-                        }
-
-                        if (help !== undefined) {
-                            help.appendTo(item)
-                                .addClass("help-text")
-                                .css("margin-top", "-3px")
-                                .css("margin-left", "27px");
-                        }
-
-                        return item;
-                    }
-                };
-
-                window.v1transpile.PluginApi.prototype.injectStyle = (id, css) => BdApi.injectCSS(id, css);
-                window.v1transpile.PluginApi.prototype.removeStyle = (id) => BdApi.clearCSS(id);
-
-                window.v1transpile.PluginStorage.prototype.load = function() {
-                    this.settings = JSON.parse(JSON.stringify(this.defaultConfig));
-                    this.path = this.path.replace('/settings.json', '');
-                    if (!window.bdPluginStorage) {
-                        return;
-                    }
-                    try {
-                        const loadSettings = bdPluginStorage.get(this.path, "settings");
-                        if (loadSettings) {
-                            Object.keys(loadSettings).map(key => {
-                                this.setSetting(key, loadSettings[key]);
-                            });
-                        }
-                    } catch (err) {
-                        console.warn(this.path, ":", "unable to load settings:", err);
-                    }
-                };
-
-                window.v1transpile.PluginStorage.prototype.save = function() {
-                    const reduced = this.settings.reduce((result, item) => {
-                        result[item.id] = item.value;
-                        return result;
-                    }, {});
-                    try {
-                        bdPluginStorage.set(this.path, "settings", reduced);
-                    } catch (err) {
-                        console.warn(this.path, ":", "unable to save settings:", err);
-                    }
-                };
-
-                window.v1transpile.Vendor = window.v1transpile.Vendor || {
-                    get jQuery() {
-                        return window.jQuery;
-                    },
-                    get $() {
-                        return window.jQuery;
-                    },
-                    get React() {
-                        return window.BDV2.react;
-                    },
-                    get ReactDOM() {
-                        return window.BDV2.reactDom;
-                    },
-                    moment: {}
-                };
-            }
-
-            const storage = new window.v1transpile.PluginStorage(config.info.name.replace(/\s+/g, '_').toLowerCase(), config.defaultSettings);
-            const BD = {
-                Api: new window.v1transpile.PluginApi(config.info),
-                Storage: storage,
-                Events: {},
-                Renderer: {}
-            };
-
-            const plugin = __webpack_require__(17)(window.v1transpile.Plugin, BD, window.v1transpile.Vendor, true);
-            this.pluginInstance = new plugin(config.info);
-
-            this.pluginInstance.internal = {
-                storage,
-                path: ''
-            };
+    patchMessageContextMenu() {
+      let patchIt = () => this.cancels.push(Renderer.patchRender(MessageContextMenu, [
+        {
+          selector: {
+            type: ContextMenuItemsGroup,
+          },
+          method: "append",
+          content: thisObject => !this.options ? null : React.createElement(SubMenuItem, {
+            label: "Fortnite",
+            render: () => this.renderMenu(thisObject)
+            // invertChildY: true
+          })
         }
+      ]));
 
-        start() {
-            this.pluginInstance.onStart();
-            this.pluginInstance.storage.load();
+      if(MessageContextMenu) return patchIt();
+
+      /* // see 103
+      ReactComponents.get("MessageContextMenu", component => {
+        MessageContextMenu = component;
+        this.cancels.push(patchIt());
+      });*/
+
+      // workaround
+      this.observer = ({addedNodes}) => {
+        for(let i = 0; i < addedNodes.length; i++) {
+          let element = addedNodes[i];
+          if(element.classList && element.classList.contains("contextMenu-uoJTbz")) {
+            console.log(1);
+            let component = getInstanceFromNode(element).return.type;
+            if("MessageContextMenu" === component.displayName || /\.ContextMenuTypes\.MESSAGE_MAIN\b[\s\S]*\.ContextMenuTypes\.MESSAGE_SYSTEM\b/.test(component.prototype.render)) {
+              delete this.observer;
+              component.displayName = "MessageContextMenu"; // above check is for compatibility with other plugins patching this component (samogot's quoter for example)
+              MessageContextMenu = component;
+              return patchIt();
+            }
+          }
         }
+      };
+    }
 
-        stop() {
-            this.pluginInstance.onStop();
-        }
+    renderMenu({props: {message, channel}}, parent) {
+      let {menu} = this.options;
 
-        load() {
-        }
+      if(null != parent) {
+        ({
+          [parent]: {
+            inner: menu
+          }
+        } = menu);
+      }
 
-        unload() {
-        }
+      return Object.keys(menu).map(key => {
+        let {
+          [key]: {
+            _subMenu,
+            _menuRef,
+            _doUpdate,
+            label,
+            response = null,
+            mention = null,
+            exec = null,
+            danger,
+            _flipY: invertChildY
+          }
+        } = menu;
 
-        getName() {
-            return this.pluginInstance.name
-        }
+        return React.createElement(_subMenu ? SubMenuItem : ContextMenuItem, {
+          label: label ? label : key,
+          render: !_subMenu ? void 0 : () => this.renderMenu(arguments[0], null != parent ? parent : key, _menuRef),
+          action: !_subMenu && _doUpdate
+            ? this.requestAndSetOptions.bind(this)
+            : _doUpdate ? void 0
+            : this.respond.bind(this, channel, message, response, mention, exec),
+          danger: danger && true || void 0,
+          invertChildY: invertChildY && true || void 0
+        });
+      });
+    }
 
-        getDescription() {
-            return this.pluginInstance.description
-        }
+    closeMenu(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      ContextMenuActions.closeContextMenu();
+    }
 
-        getVersion() {
-            return this.pluginInstance.version
-        }
+    respond(channel, message, response, mention, exec, event) {
+      this.closeMenu(event);
 
-        getAuthor() {
-            return this.pluginInstance.authors.join(', ')
-        }
+      if(exec)
+        this.processCommand(channel, exec);
 
-        getSettingsPanel() {
-            if (this.pluginInstance.storage.settings.length === 0)
-                return '';
-            const Settings = window.v1transpile.Settings;
+      if(response) {
+        if(mention) response = `<@!${message.author.id}>, ${response}`;
+        this.sendMessage(channel, response);
+      }
+    }
 
-            const panel = Settings.topPanel();
-            const filterControls = Settings.controlGroups().appendTo(panel);
+    requestJson(url) {
+      return new Promise((resolve, reject) => {
+        require("request")(url, (err, {statusCode}, body) => {
+          if(err || 200 !== statusCode) return reject(err || new Error("Request failed with status ${statusCode}."));
+          resolve(JSON.parse(body));
+        });
+      });
+    }
 
-            const Control = Settings.controlGroup({label: this.pluginInstance.name + " settings"})
-                .appendTo(filterControls);
-            const saveAndReload = () => {
-                this.pluginInstance.storage.save();
-                if (window.pluginCookie && window.pluginCookie[this.pluginInstance.name]) {
-                    this.pluginInstance.onStop();
-                    Promise.resolve().then(() => {
-                    }).then(() => {
-                        this.pluginInstance.onStart();
-                    });
-                }
-            };
-            for (let item of this.pluginInstance.storage.settings) {
-                let input;
-                switch (item.type) {
-                    case 'bool':
-                        input = Settings.checkbox({
-                            label: item.text,
-                            help: item.description,
-                            checked: item.value,
-                            callback: state => {
-                                this.pluginInstance.storage.setSetting(item.id, state);
-                                saveAndReload();
-                            },
-                        });
-                        break;
-                    case 'text':
-                        input = Settings.input({
-                            label: item.text,
-                            help: item.description,
-                            value: item.value,
-                            callback: state => {
-                                this.pluginInstance.storage.setSetting(item.id, state);
-                                saveAndReload();
-                            },
-                        });
-                        break;
-                }
-                if (input)
-                    Control.append(input)
-            }
+    processCommand() {
+      return this.sendMessage(...arguments);
+    }
 
-            return panel[0];
-        }
-    };
+    sendMessage(channel, text) {
+      let {identifiers} = this.options;
 
-/***/ }),
-/* 16 */
-/***/ (function(module, exports) {
+      Object.keys(identifiers).forEach(identifier => {
+        text = text.replace(`%${identifier}%`, identifiers[identifier]);
+      });
 
-    module.exports = {
-        "info": {
-            "name": "SimpleFornite",
-            "authors": [
-                "Simple#0001",
-                "samogot",
-                "square#3880"
-            ],
-            "version": "1.0.0",
-            "description": "Enhances the moderation of the Fortnite Discord server.",
-            "repository": "https://github.com/reecebenson/FortniteModeration",
-            "homepage": "",
-            "reloadable": true
-        },
-        "defaultSettings": [],
-        "permissions": []
-    };
+      MessageActions.sendMessage(channel.id, {content: text, invalidEmojis: [], tts: false});
+    }
 
-/***/ }),
-/* 17 */
-/***/ (function(module, exports) {
+    async requestAndSetOptions(event) {
+      if(event)
+        this.closeMenu(event);
 
-    module.exports = (Plugin, BD) => {
+      try {
+        this.options = await this.requestJson(this.optionsUrl)
+      } catch(error) {
+        // either network or JSON.parse error
+        return console.error(error);
+      }
 
-        const {Api} = BD;
+      if(this.semverCompare(this.getVersion(), this.options.info.version) < 0) {
+        let {simple} = this.options.identifiers;
+        ModalsStack.push(function(props) {
+          let br = () => React.createElement("br", null);
+          return React.createElement(ConfirmModal, Object.assign({
+            title: "Updating SimpleFortnite",
+            body: React.createElement(React.Fragment, null,
+              "Hey!", br(), br(),
+              "The new moderation options have been applied.", br(),
+              "Additionally there is an update which requires manual installation.", br(),
+              br(),
+              "Please contact ",
+              React.cloneElement(Parser.parse(`<@!${simple}>`)[0], {preventCloseFromModal: true}),   // <- still needs some work lol
+              " to get it! :)"
+            ),
+            confirmText: "Oki Doki"
+          }, props));
+        });
+      }
+    }
 
-        const minDIVersion = '1.0';
-        if (!window.DiscordInternals) {
-            const message = `Lib Discord Internals v${minDIVersion} or higher not found! Please install or upgrade that utility plugin. See install instructions here https://goo.gl/kQ7UMV`;
-            Api.log(message, 'warn');
-            return (class EmptyStubPlugin extends Plugin {
-                onStart() {
-                    Api.log(message, 'warn');
-                    alert(message);
-                    return false;
-                }
+    semverCompare(v1, v2) {
+      // 0: equal, >0: v1 is newer, <0: v2 is newer
+      v1 = v1.split(".");
+      v2 = v2.split(".");
+      for(let i = 0, max = Math.max(v1.length, v2.length); i < max; i++) {
+        let _1 = (0|v1[i]) || 0,
+          _2 = (0|v2[i]) || 0;
+        if(_1 < _2) return -1;
+        if(_1 > _2) return 1;
+      }
+      return 0;
+    }
 
-                onStop() {
-                    return true;
-                }
-            });
-        }
-
-        const {monkeyPatch, WebpackModules, ReactComponents, getOwnerInstance, React, Renderer, Filters} = window.DiscordInternals;
-
-        // Deffer module loading
-        let moment, Constants, GuildsStore, UsersStore, MembersStore, SubMenuItem, UserSettingsStore, MessageActionsSend, MessageActions, MessageQueue, MessageParser, HistoryUtils, PermissionUtils, ContextMenuActions, ModalsStack, ContextMenuItemsGroup, ContextMenuItem, ExternalLink, ConfirmModal;
-        function loadAllModules() {
-            moment = WebpackModules.findByUniqueProperties(['parseZone']);
-
-            Constants = WebpackModules.findByUniqueProperties(['Routes', 'ChannelTypes']);
-
-            GuildsStore = WebpackModules.findByUniqueProperties(['getGuild']);
-            UsersStore = WebpackModules.findByUniqueProperties(['getUser', 'getCurrentUser']);
-            MembersStore = WebpackModules.findByUniqueProperties(['getNick']);
-            UserSettingsStore = WebpackModules.findByUniqueProperties(['developerMode', 'locale']);
-
-            MessageActionsSend = WebpackModules.findByUniqueProperties(["sendMessage"]);
-            MessageActions = WebpackModules.findByUniqueProperties(['jumpToMessage', '_sendMessage']);
-            MessageQueue = WebpackModules.findByUniqueProperties(['enqueue']);
-            MessageParser = WebpackModules.findByUniqueProperties(['createMessage', 'parse', 'unparse']);
-            HistoryUtils = WebpackModules.findByUniqueProperties(['transitionTo', 'replaceWith', 'getHistory']);
-            PermissionUtils = WebpackModules.findByUniqueProperties(['getChannelPermissions', 'can']);
-            ContextMenuActions = WebpackModules.find(Filters.byCode(/CONTEXT_MENU_CLOSE/, c => c.close));
-
-            ModalsStack = WebpackModules.findByUniqueProperties(['push', 'update', 'pop', 'popWithKey']);
-
-            ContextMenuItemsGroup = WebpackModules.find(Filters.byCode(/itemGroup/));
-            ContextMenuItemsGroup.displayName = 'ContextMenuItemsGroup';
-            ContextMenuItem = WebpackModules.find(Filters.byCode(/\.label\b.*\.hint\b.*\.action\b/));
-            ContextMenuItem.displayName = 'ContextMenuItem';
-
-            SubMenuItem = WebpackModules.findByDisplayName("SubMenuItem");
-
-            ExternalLink = WebpackModules.find(Filters.byCode(/\.trusted\b/));
-            ExternalLink.displayName = 'ExternalLink';
-            ConfirmModal = WebpackModules.find(Filters.byPrototypeFields(['handleCancel', 'handleSubmit', 'handleMinorConfirm']));
-            ConfirmModal.displayName = 'ConfirmModal';
-            // const TooltipWrapper = WebpackModules.find(Filters.byPrototypeFields(['showDelayed']));
-            // TooltipWrapper.displayName = 'TooltipWrapper';
-        }
-
-        // ReactComponents.setName('Message', Filters.byPrototypeFields(['renderOptionPopout', 'renderUserPopout', 'handleMessageContextMenu']));
-        // ReactComponents.setName('ChannelTextAreaForm', Filters.byPrototypeFields(['handleTextareaChange', 'render']));
-        // ReactComponents.setName('OptionPopout', Filters.byPrototypeFields(['handleCopyId', 'handleEdit', 'handleRetry', 'handleDelete', 'handleReactions', '', '', '', '']));
-        ReactComponents.setName('Embed', Filters.byPrototypeFields(['isMaskedLinkTrusted', 'renderProvider', 'renderAuthor', 'renderFooter', 'renderTitle', 'renderDescription', 'renderFields', 'renderImage', 'renderVideo', 'renderGIFV', 'hasProvider', 'renderSpotify']));
-        ReactComponents.setName('MessageContextMenu', Filters.byCode(/\.ContextMenuTypes\.MESSAGE_MAIN\b[\s\S]*\.ContextMenuTypes\.MESSAGE_SYSTEM\b/, c => c.prototype && c.prototype.render));
-        ReactComponents.setName('MessageResendItem', Filters.byPrototypeFields(['handleResendMessage', 'render']));
-        ReactComponents.setName('MessageGroup', Filters.byCode(/"message-group"[\s\S]*"has-divider"[\s\S]*"hide-overflow"[\s\S]*"is-local-bot-message"/, c => c.prototype && c.prototype.render));
-
-        const BASE_JUMP_URL = 'https://github.com/samogot/betterdiscord-plugins/blob/master/v2/Quoter/link-stub.md';
-
-
-        class SimpleFortnite extends Plugin {
-            constructor(props) {
-                super(props);
-                this.cancelPatches = [];
-                this.options = null;
-                this.optionsLink = "https://raw.githubusercontent.com/reecebenson/FortniteModeration/master/options.json";
-            }
-
-            onStart() {
-                /** Load Modules */
-                loadAllModules();
-
-                /** Grab Menu Items */
-                this.doUpdate(null, null, null);
-
-                /** Generate Menu */
-                this.generateContextMenu();
-
-                return true;
-            }
-
-            sendMessage(channel, text) {
-                // Process text
-                console.log(text);
-                text = text.replace("%weatherman%", this.options["identifiers"]["weatherman"]);             // Weatherman
-                text = text.replace("%br_squaduos_pc%", this.options["identifiers"]["br_squaduos_pc"]);     // BR PC
-                text = text.replace("%br_squaduos_ps4%", this.options["identifiers"]["br_squaduos_ps4"]);   // BR PS4
-                text = text.replace("%br_squaduos_xb1%", this.options["identifiers"]["br_squaduos_xb1"]);   // BR XB1
-                text = text.replace("%stw_squaduos_pc%", this.options["identifiers"]["stw_squaduos_pc"]);   // STW PC
-                text = text.replace("%stw_squaduos_ps4%", this.options["identifiers"]["stw_squaduos_ps4"]); // STW PS4
-                text = text.replace("%stw_squaduos_xb1%", this.options["identifiers"]["stw_squaduos_xb1"]); // STW XB1
-
-                // Send our message
-                MessageActions.sendMessage(channel.id, {content: text, invalidEmojis: [], tts: false});
-            }
-
-            /**
-             * MENU BUILDER
-             */
-            generateContextMenu() {
-                ReactComponents.get("MessageContextMenu", MessageContextMenu => {
-                    const cancel = Renderer.patchRender(MessageContextMenu, [
-                        {
-                            selector: { type: ContextMenuItemsGroup },
-                            method: "prepend",
-                            content: (menu) => React.createElement(SubMenuItem, {
-                                label: "Fortnite",
-                                render: this.generateMenu(menu, null, null),
-                                invertChildY: true
-                            })
-                        }
-                    ]);
-                    this.cancelPatches.push(cancel);
-                });
-            }
-
-            generateMenu({props: {message, channel}}, parent, category) {
-                var elements = (() => { 
-                    if(parent == null && category == null) {
-                        return (() => {
-                            let es = [];
-
-                            for(let key in this.options["menu"]) {
-                                let val = this.options["menu"][key];
-                                let ele = { label: key };
-
-                                if(val._subMenu)
-                                    ele.render = () => this.generateMenu(arguments[0], key, val._menuRef);
-                                else if(val._doUpdate)
-                                    ele.action = this.doUpdate.bind(this, channel, message);
-                                else
-                                    ele.action = this.runResponse.bind(this, channel, message, val.response ? val.response : null, val.mention ? val.mention : null, val.exec ? val.exec : null);
-
-                                // Danger
-                                if(val._danger)
-                                    ele.danger = true;
-
-                                // Flip Y
-                                if(val._flipY)
-                                    ele.invertChildY = true;
-                                
-                                es.push(ele);
-                            }
-
-                            return es;
-                        })();
-                    } else {
-                        return (() => {
-                            let es = [];
-                            for(let key in this.options["menu"][parent]["inner"]) {
-                                let val = this.options["menu"][parent]["inner"][key];
-                                let ele = { label: val.label };
-
-                                // Set Action
-                                if(val._subMenu)
-                                    ele.render = () => this.generateMenu(arguments[0], parent, val._menuRef);
-                                else if(val._doUpdate)
-                                    ele.action = this.doUpdate.bind(this, channel, message);
-                                else
-                                    ele.action = this.runResponse.bind(this, channel, message, val.response ? val.response : null, val.mention ? val.mention : null, val.exec ? val.exec : null);
-                                        
-                                // Danger
-                                if(val._danger)
-                                    ele.danger = true;
-
-                                // Flip Y
-                                if(val._flipY)
-                                    ele.invertChildY = true;
-
-                                es.push(ele);
-                            }
-                            return es;
-                        })();
-                    }
-                })();
-
-                return elements.map(e => React.createElement(e.render ? SubMenuItem : ContextMenuItem, e));
-            }
-
-            runResponse(channel, message, response, mention, exec, element) {
-                // Close Menu
-                this.closeMenu(element);
-
-                // Are we executing a command?
-                if(exec) this.processCommand(channel, exec);
-
-                // Are we sending a response?
-                if(response) {
-                    let authorId = message.author.id;
-                    this.sendMessage(channel, `${(mention?"<@!"+authorId+">, ":"")}${response}`);
-                }
-            }
-            /**
-             * ***********************************
-             * MENU FUNCTIONALITY
-             * ***********************************
-             */
-
-            closeMenu(menu) {
-                menu.preventDefault();
-                menu.stopPropagation();
-                ContextMenuActions.close();
-            }
-
-            async processCommand(channel, cmd) {
-                await this.sendMessage(channel, cmd);
-            }
-
-            doUpdate(c, m, e) {
-                if(e != null)
-                    this.closeMenu(e);
-
-                // Update
-                this.getFileAsJson(this.optionsLink, (resp) => {
-                    // Set our Options
-                    this.options = resp;
-                    
-                    // Version Control
-                    let optsVersion = this.options["info"]["version"];
-                    let thisVersion = this.version;
-                    if(thisVersion != optsVersion) {
-                        ModalsStack.push(function(props) { // Can't use arrow function here
-                            return React.createElement(ConfirmModal, Object.assign({
-                                title: "Updating SimpleFortnite",
-                                body: "Hey!\n\nYou tried updating SimpleFortnite, but it seems we have incompatible versions.\nIt isn't that much of an issue, but some things in your version may not function correctly.\n\nPlease ask Simplе#0001 for the latest version! :)",
-                                // confirmText: Constants.Messages.OKAY
-                            }, props));
-                        })
-                    }
-                });
-            }
-
-            cancelAllPatches() {
-                for (let cancel of this.cancelPatches)
-                    cancel();
-            }
-
-            onStop() {
-		        this.cancelAllPatches();
-                return true;
-            }
-
-            getFileAsJson(fileLink, callback) {
-                let request = require("request");
-                request(fileLink, function(err, resp, body) {
-                    callback(JSON.parse(body));
-                });
-            }
-        }
-
-        return SimpleFortnite;
-    };
-
-/***/ })
-/******/ ]);
+  }
+})();
 
 /*@end @*/

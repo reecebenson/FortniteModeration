@@ -47,7 +47,7 @@ global.simple_fortnite = (function(){
     }
 
     getVersion() {
-      return "1.1.0";
+      return "1.1.1";
     }
 
     load() {}
@@ -141,9 +141,9 @@ global.simple_fortnite = (function(){
         for(let i = 0; i < addedNodes.length; i++) {
           let element = addedNodes[i];
           if(element.classList && element.classList.contains("contextMenu-uoJTbz")) {
-            console.log(1);
-            let component = getInstanceFromNode(element).return.type;
-            if("MessageContextMenu" === component.displayName || /\.ContextMenuTypes\.MESSAGE_MAIN\b[\s\S]*\.ContextMenuTypes\.MESSAGE_SYSTEM\b/.test(component.prototype.render)) {
+            let component = getInstanceFromNode(element);
+            if(!(component && (component = component.return.type))) continue;
+            if("MessageContextMenu" === component.displayName || component.prototype && /\.ContextMenuTypes\.MESSAGE_MAIN\b[\s\S]*\.ContextMenuTypes\.MESSAGE_SYSTEM\b/.test(component.prototype.render)) {
               delete this.observer;
               component.displayName = "MessageContextMenu"; // above check is for compatibility with other plugins patching this component (samogot's quoter for example)
               MessageContextMenu = component;

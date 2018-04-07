@@ -27,9 +27,17 @@
 global.simple_fortnite = (function(){
   "use strict";
   var WebpackModules, ReactComponents, getOwnerInstance, React, Renderer, Filters, getInstanceFromNode;
-  var ContextMenuActions, ContextMenuItemsGroup, ContextMenuItem, SubMenuItem, MessageContextMenu, ConfirmModal, ModalsStack, MessageActions, Parser;
+  var ContextMenuActions, ContextMenuItemsGroup, ContextMenuItem, SubMenuItem, MessageContextMenu, ConfirmModal, ModalsStack, MessageActions, VoiceActions, Parser, MessageFileUpload, VoiceChannels;
 
   return class SimpleFortnite {
+    constructor() {
+      this.css = `
+        .simpleTextarea {
+          background: blue;
+        }
+      `;
+    }
+
     getName() {
       return "SimpleFortnite";
     }
@@ -57,6 +65,8 @@ global.simple_fortnite = (function(){
         return alert("Lib Discord Internals not found! Please install that utility plugin.\nSee install instructions here https://goo.gl/kQ7UMV.");
       }
 
+      BdApi.injectCSS(this.constructor.name, this.css);
+
       ({
         WebpackModules,
         ReactComponents,
@@ -74,7 +84,6 @@ global.simple_fortnite = (function(){
       this.loadAllModules();
       this.patchMessageContextMenu();
       this.requestAndSetOptions();
-
     }
 
     stop() {
@@ -109,6 +118,10 @@ global.simple_fortnite = (function(){
       ModalsStack = WebpackModules.findByUniqueProperties(['push', 'update', 'pop', 'popWithKey']);
 
       MessageActions = WebpackModules.findByUniqueProperties(['sendMessage']);
+      MessageFileUpload = WebpackModules.findByUniqueProperties(['isFull', 'drain', 'handleResponse', 'handleSend', 'handleEdit']);
+
+      VoiceActions = WebpackModules.findByUniqueProperties(['selectVoiceChannel', 'clearVoiceChannel']);
+      VoiceChannels = WebpackModules.findByDisplayName("GuildVoiceMoveToItem");
 
       Parser = WebpackModules.findByUniqueProperties(["parserFor", "parse"]);
     }
@@ -120,10 +133,31 @@ global.simple_fortnite = (function(){
             type: ContextMenuItemsGroup,
           },
           method: "append",
-          content: thisObject => !this.options ? null : React.createElement(SubMenuItem, {
+          content: fnObject => !this.options ? null : React.createElement(SubMenuItem, {
             label: "Fortnite",
-            render: () => this.renderMenu(thisObject)
+            render: () => this.renderMenu(fnObject)
             // invertChildY: true
+          })
+        },
+        {
+          selector: {
+            type: ContextMenuItemsGroup,
+          },
+          method: "append",
+          content: modObject => React.createElement(SubMenuItem, {
+            label: "Moderation",
+            render: () => this.renderModerationMenu(modObject)
+            // invertChildY: true
+          })
+        },
+        {
+          selector: {
+            type: ContextMenuItemsGroup,
+          },
+          method: "append",
+          content: uidObject => React.createElement(ContextMenuItem, {
+            label: "UID Mention",
+            action: this.idMention.bind(this, uidObject.props.channel, uidObject.props.message)
           })
         }
       ]));
@@ -175,7 +209,7 @@ global.simple_fortnite = (function(){
             response = null,
             mention = null,
             exec = null,
-            danger,
+            _danger = null,
             _flipY: invertChildY
           }
         } = menu;
@@ -187,10 +221,165 @@ global.simple_fortnite = (function(){
             ? this.requestAndSetOptions.bind(this)
             : _doUpdate ? void 0
             : this.respond.bind(this, channel, message, response, mention, exec),
-          danger: danger && true || void 0,
+          danger: _danger && true || void 0,
           invertChildY: invertChildY && true || void 0
         });
       });
+    }
+
+    renderModerationMenu({props: {message, channel}}, category) {
+      var elements = (() => { switch(category) {
+        case "warn": return [
+          {
+            label: "Simple",
+            action: () => console.log("simple warn")
+          },
+          {
+            label: "Kick",
+            action: () => console.log("kick warn")
+          },
+          {
+            label: "Ban",
+            action: () => console.log("ban warn")
+          }
+        ];
+
+        // MAIN MENU
+        default: return [
+          {
+            label: "Warn",
+            render: () => this.renderModerationMenu(arguments[0], "warn")
+          },
+          {
+            label: "Kick",
+            action: this.modKickUser.bind(this, channel, message)
+          },
+          {
+            label: "Ban",
+            action: this.modBanUser.bind(this, channel, message)
+          },
+          {
+            label: "User Information",
+            action: this.modUserInfo.bind(this, channel, message)
+          },
+          {
+            label: "Go to Voice Channel",
+            action: this.modGoToVC.bind(this, channel, message)
+          },
+          {
+            label: "Test",
+            action: this.testFunc.bind(this, channel, message)
+          }
+        ];
+      }})();
+
+      let ret = elements.map(e => { return React.createElement(e.render ? SubMenuItem : ContextMenuItem, e); });
+      return ret;
+    }
+
+    takeScreenshot(callback) {
+      const {desktopCapturer, screen} = require('electron');
+      var _this = this;
+      this.callback = callback;
+     
+      desktopCapturer.getSources({types: ['window', 'screen']}, (error, sources) => {
+        if (error) throw error;
+
+        for (let i = 0; i < sources.length; ++i) {
+          if(sources[i].name.includes("- Discord")) {
+            let rect = (({screenX:x,screenY:y,innerWidth:width,innerHeight:height})=>({x,y,width,height}))(window),
+              screen = require("electron").screen.getDisplayMatching(rect);
+
+            require("electron").remote.getCurrentWebContents().capturePage((nativeImage=>{ return _this.callback(nativeImage.toDataURL()); }));
+            return;
+          }
+        }
+      });
+    }
+
+    async modKickUser(channel, message, e) {
+      if(e)
+        this.closeMenu(e);
+
+      let userNick = message.nick;
+      let userTag = message.author.tag;
+      let userInfo = userNick == null ? userTag : `${userNick} (${userTag})`;
+      console.log(message);
+
+      ModalsStack.push(function(props) {
+        let br = () => React.createElement("br", null);
+        let boldname = () => React.createElement("strong", null, userInfo);
+        let textarea = () => React.createElement("textarea", {className: "inputDefault-Y_U37D input-2YozMi size16-3IvaX_ textArea-31DGOu scrollbarDefault-3oTVtP scrollbar-11WJwo", placeholder: `Reason for kicking ${userInfo}` });
+        return React.createElement(ConfirmModal, Object.assign({
+          title: `Kicking Member`,
+          body: React.createElement(React.Fragment, null,
+            `You're attempting to kick `, boldname(), `.`, br(), br(), textarea()
+          ),
+          confirmText: "Kick"
+        }, props));
+      });
+    }
+
+    modBanUser(channel, message, e) {
+      if(e)
+        this.closeMenu(e);
+
+    }
+
+    modUserInfo(channel, message, e) {
+      if(e)
+        this.closeMenu(e);
+
+      // User Information Channel
+      let uinfoChl = "341265291814240257";
+      MessageActions.sendMessage(uinfoChl, {content: `!uinfo ${message.author.id}`, invalidEmojis: [], tts: false});
+    }
+
+    testFunc(channel, message, e) {
+      if(e)
+        this.closeMenu(e);
+
+      //VoiceActions.selectVoiceChannel(channel.guild_id, "419254410363797519");
+
+      console.log("Get Target Channels");
+      //console.log({ d: VoiceChannels });
+      console.log(VoiceChannels.prototype.getTargetChannels());
+    }
+
+    modGoToVC(channel, message, e) {
+      if(e)
+        this.closeMenu(e);
+
+      this.takeScreenshot(async (base64data) => {
+        ModalsStack.push(function(props) {
+          let br = () => React.createElement("br", null);
+          let b64image = () => React.createElement("img", { src: base64data, width: "100%" });
+          return React.createElement(ConfirmModal, Object.assign({
+            title: `Preview`,
+            body: React.createElement(React.Fragment, null,
+              b64image()
+            ),
+            confirmText: "Close"
+          }, props));
+        });
+
+        MessageActions._sendMessage(channel.id, {content: "Image Test", invalidEmojis: [], tts: false })
+        .then((message) => {
+          MessageFileUpload.handleSend({ channelId: channel.id, file: "C:\\Users\\Reece\\Desktop\\test.png", filename: "simplefortnite.png" });
+        });
+        //console.log(MessageActions);
+        //console.log(MessageActions.sendMessage);
+      }, "image/png");
+    }
+
+    getImageDimensions(file) {
+      return new Promise (function (resolved, rejected) {
+        var i = new Image()
+        i.onload = function(){
+          resolved({width: i.width, height: i.height})
+        };
+        i.src = file
+      })
     }
 
     closeMenu(event) {
@@ -279,6 +468,18 @@ global.simple_fortnite = (function(){
       return 0;
     }
 
+    async idMention(channel, message, e) {
+      if(e)
+        this.closeMenu(e);
+
+      let textarea = document.querySelector(".chat textarea");
+      let channelTextAreaForm = getOwnerInstance(textarea, {include: ["ChannelTextAreaForm"]});
+      let oldText = channelTextAreaForm.state.textValue;
+
+      await channelTextAreaForm.setState({
+        textValue: oldText + `<@!${message.author.id}> `
+      });
+    }
   }
 })();
 

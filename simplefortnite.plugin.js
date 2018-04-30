@@ -26,14 +26,23 @@
 
 global.simple_fortnite = (function(){
   "use strict";
-  var WebpackModules, ReactComponents, getOwnerInstance, React, Renderer, Filters, getInstanceFromNode;
-  var ContextMenuActions, ContextMenuItemsGroup, ContextMenuItem, SubMenuItem, MessageContextMenu, ConfirmModal, ModalsStack, MessageActions, VoiceActions, Parser, MessageFileUpload, VoiceChannels;
+  var WebpackModules, ReactComponents, getOwnerInstance, React, Renderer, Filters, getInstanceFromNode, UploadModule, UserAdminItemGroup;
+  var ContextMenuActions, ContextMenuItemsGroup, ContextMenuItem, SubMenuItem, UserContextMenu, MessageContextMenu, ConfirmModal, ModalsStack, MessageActions, VoiceActions, PruneRenderMenu, Parser, MessageFileUpload, VoiceChannels;
 
   return class SimpleFortnite {
     constructor() {
       this.css = `
         .simpleTextarea {
           background: blue;
+        }
+
+        #headerToggleUserScan {
+          background: transparent;
+          color: #ccc;
+        }
+
+        #headerToggleUserScan:hover {
+          color: white;
         }
       `;
     }
@@ -78,19 +87,28 @@ global.simple_fortnite = (function(){
       ({getInstanceFromNode} = global.BDV2.reactDom.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactDOMComponentTree);
 
       this.cancels = [];
+      this.ucmcancels = [];
       this.options = null;
       this.optionsUrl = "https://raw.githubusercontent.com/reecebenson/FortniteModeration/master/options.json";
 
       this.loadAllModules();
       this.patchMessageContextMenu();
+      this.patchUserContextMenu();
       this.requestAndSetOptions();
     }
 
     stop() {
-      for( let i = 0; i < this.cancels.length; i++ ) {
+      for( let i = 0; i < this.cancels.length; i++ )
         this.cancels[i]();
-      }
+
+      for(let x = 0; x < this.ucmcancels.length; x++)
+        this.ucmcancels[x]();
+
+      if(this.observer)
+        delete this.observer;
+        
       delete this.cancels;
+      delete this.ucmcancels;
       delete this.options;
       delete this.optionsUrl;
     }
@@ -110,12 +128,18 @@ global.simple_fortnite = (function(){
       SubMenuItem = WebpackModules.findByDisplayName("SubMenuItem");
 
       // this became very unreliable in a recent discord update
-      /* ReactComponents.setName('MessageContextMenu',
+       ReactComponents.setName('MessageContextMenu',
         Filters.byCode(/\.ContextMenuTypes\.MESSAGE_MAIN\b[\s\S]*\.ContextMenuTypes\.MESSAGE_SYSTEM\b/,
         c => c.prototype && c.prototype.render)
-      );*/
+      );
 
       ModalsStack = WebpackModules.findByUniqueProperties(['push', 'update', 'pop', 'popWithKey']);
+
+      //UserContextMenu = WebpackModules.findByUniqueProperties(['renderAdminGroup', 'renderChangeNicknameItem', 'renderCloseChatItem', 'renderMoveToItem', 'renderRolesGroup']);
+      ReactComponents.setName('UserContextMenu',
+        Filters.byCode(/\.ContextMenuTypes\.USER_CHANNEL_TITLE/,
+          c => c.prototype && c.prototype.render)
+      );
 
       MessageActions = WebpackModules.findByUniqueProperties(['sendMessage']);
       MessageFileUpload = WebpackModules.findByUniqueProperties(['isFull', 'drain', 'handleResponse', 'handleSend', 'handleEdit']);
@@ -123,7 +147,43 @@ global.simple_fortnite = (function(){
       VoiceActions = WebpackModules.findByUniqueProperties(['selectVoiceChannel', 'clearVoiceChannel']);
       VoiceChannels = WebpackModules.findByDisplayName("GuildVoiceMoveToItem");
 
+      UploadModule = WebpackModules.findByUniqueProperties(['instantBatchUpload']);
+
       Parser = WebpackModules.findByUniqueProperties(["parserFor", "parse"]);
+    }
+    
+    patchUserContextMenu() {
+      let patchIt = () => this.ucmcancels.push(Renderer.patchRender(UserContextMenu, [
+        {
+          selector: {
+            type: ContextMenuItemsGroup,
+          },
+          method: "append",
+          content: kfnObject => React.createElement(ContextMenuItem, {
+            label: "Kick for Name",
+            danger: true,
+            action: this.kickForName.bind(this, kfnObject.props.user)
+          })
+        },
+        {
+          selector: {
+            type: ContextMenuItemsGroup,
+          },
+          method: "append",
+          content: bcuObject => React.createElement(ContextMenuItem, {
+            label: "BCheck User",
+            danger: true,
+            action: this.bCheckUser.bind(this, bcuObject.props.user)
+          })
+        }
+      ]));
+
+      if(UserContextMenu) return patchIt();
+
+      ReactComponents.get("UserContextMenu", component => {
+        UserContextMenu = component;
+        this.ucmcancels.push(patchIt());
+      });
     }
 
     patchMessageContextMenu() {
@@ -172,10 +232,11 @@ global.simple_fortnite = (function(){
 
       // workaround
       this.observer = ({addedNodes}) => {
+        if(this.found)
+          return;
         for(let i = 0; i < addedNodes.length; i++) {
           let element = addedNodes[i];
           if(element.classList && element.classList.contains("contextMenu-uoJTbz")) {
-            console.log(1);
             let component = getInstanceFromNode(element).return.type;
             if("MessageContextMenu" === component.displayName || /\.ContextMenuTypes\.MESSAGE_MAIN\b[\s\S]*\.ContextMenuTypes\.MESSAGE_SYSTEM\b/.test(component.prototype.render)) {
               delete this.observer;
@@ -290,7 +351,7 @@ global.simple_fortnite = (function(){
             let rect = (({screenX:x,screenY:y,innerWidth:width,innerHeight:height})=>({x,y,width,height}))(window),
               screen = require("electron").screen.getDisplayMatching(rect);
 
-            require("electron").remote.getCurrentWebContents().capturePage((nativeImage=>{ return _this.callback(nativeImage.toDataURL()); }));
+            require("electron").remote.getCurrentWebContents().capturePage((nativeImage=>{ return _this.callback({ dataURL: nativeImage.toDataURL(), png: nativeImage.toPNG() }); }));
             return;
           }
         }
@@ -341,19 +402,22 @@ global.simple_fortnite = (function(){
 
       //VoiceActions.selectVoiceChannel(channel.guild_id, "419254410363797519");
 
-      console.log("Get Target Channels");
+      console.log("Load Prune Menu");
+      PruneRenderMenu.render();
       //console.log({ d: VoiceChannels });
-      console.log(VoiceChannels.prototype.getTargetChannels());
+      //console.log(VoiceChannels.prototype.getTargetChannels());
+
+
     }
 
     modGoToVC(channel, message, e) {
       if(e)
         this.closeMenu(e);
 
-      this.takeScreenshot(async (base64data) => {
+      this.takeScreenshot(async (ssData) => {
         ModalsStack.push(function(props) {
           let br = () => React.createElement("br", null);
-          let b64image = () => React.createElement("img", { src: base64data, width: "100%" });
+          let b64image = () => React.createElement("img", { src: ssData.dataURL, width: "100%" });
           return React.createElement(ConfirmModal, Object.assign({
             title: `Preview`,
             body: React.createElement(React.Fragment, null,
@@ -363,10 +427,8 @@ global.simple_fortnite = (function(){
           }, props));
         });
 
-        MessageActions._sendMessage(channel.id, {content: "Image Test", invalidEmojis: [], tts: false })
-        .then((message) => {
-          MessageFileUpload.handleSend({ channelId: channel.id, file: "C:\\Users\\Reece\\Desktop\\test.png", filename: "simplefortnite.png" });
-        });
+        MessageActions._sendMessage(channel.id, {content: "Image Test", invalidEmojis: [], tts: false });
+        UploadModule.instantBatchUpload(channel.id, [new File([ssData.png], "simplefortnite-image.png", {type:"PNG"})]);
         //console.log(MessageActions);
         //console.log(MessageActions.sendMessage);
       }, "image/png");
@@ -479,6 +541,24 @@ global.simple_fortnite = (function(){
       await channelTextAreaForm.setState({
         textValue: oldText + `<@!${message.author.id}> `
       });
+    }
+
+    async kickForName(user, e) {
+      if(e)
+        this.closeMenu(e);
+
+      // Kick for name
+      let modlogChl = "374987880592048128";
+      MessageActions.sendMessage(modlogChl, {content: `!warn kick ${user.id} Your username/nickname is in violation of Official Fornite Discord #rules. Please adhere to our guidelines, or your account may be banned.`, invalidEmojis: [], tts: false});
+    }
+
+    async bCheckUser(user, e) {
+      if(e)
+        this.closeMenu(e);
+
+      // BCheck
+      let modchatChl = "341265291814240257";
+      MessageActions.sendMessage(modchatChl, {content: `!bcheck 0 ${user.id}`, invalidEmojis: [], tts: false});
     }
   }
 })();

@@ -17,6 +17,7 @@
         "br_squaduos_pc": "362236453771804683",
         "br_squaduos_ps4": "362676778642178049",
         "br_squaduos_xb1": "362676808975646732",
+        "br_squaduos_ios": "423970748093431818",
 
         "stw_squaduos_pc": "322852071051231242",
         "stw_squaduos_ps4": "362676713592717314",
@@ -50,6 +51,11 @@
                 {
                     "label": "Looking for Group - XB1",
                     "response": "Please use the Looking-for-Group (LFG) channels: <#%br_squaduos_xb1%> - <#%stw_squaduos_xb1%>.",
+                    "mention": true
+                },
+                {
+                    "label": "Looking for Group - iOS",
+                    "response": "Please use the Looking-for-Group (LFG) channel: <#%br_squaduos_ios%>.",
                     "mention": true
                 }
             ]

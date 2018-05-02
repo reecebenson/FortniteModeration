@@ -27,7 +27,7 @@
 global.simple_fortnite = (function(){
   "use strict";
   var WebpackModules, ReactComponents, getOwnerInstance, React, Renderer, Filters, getInstanceFromNode, UploadModule, UserAdminItemGroup;
-  var ContextMenuActions, ContextMenuItemsGroup, ContextMenuItem, SubMenuItem, UserContextMenu, MessageContextMenu, ConfirmModal, ModalsStack, MessageActions, VoiceActions, PruneRenderMenu, Parser, MessageFileUpload, VoiceChannels;
+  var NickHandler, ContextMenuActions, ContextMenuItemsGroup, ContextMenuItem, SubMenuItem, UserContextMenu, MessageContextMenu, ConfirmModal, ModalsStack, MessageActions, VoiceActions, Parser, MessageFileUpload, VoiceChannels;
 
   return class SimpleFortnite {
     constructor() {
@@ -58,6 +58,7 @@ global.simple_fortnite = (function(){
     getAuthor() {
       return [
         "Simple#0001",
+        "Soulrift#0001",
         "samogot#4379",
         "square#3880"
       ].join(", ");
@@ -86,11 +87,13 @@ global.simple_fortnite = (function(){
       } = global.DiscordInternals);
       ({getInstanceFromNode} = global.BDV2.reactDom.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactDOMComponentTree);
 
+      /* Variables */
       this.cancels = [];
       this.ucmcancels = [];
       this.options = null;
       this.optionsUrl = "https://raw.githubusercontent.com/reecebenson/FortniteModeration/master/options.json";
 
+      /* Initialise */
       this.loadAllModules();
       this.patchMessageContextMenu();
       this.patchUserContextMenu();
@@ -98,15 +101,17 @@ global.simple_fortnite = (function(){
     }
 
     stop() {
-      for( let i = 0; i < this.cancels.length; i++ )
+      /* Unpatch Renders */
+      for(let i = 0; i < this.cancels.length; i++)
         this.cancels[i]();
-
       for(let x = 0; x < this.ucmcancels.length; x++)
-        this.ucmcancels[x]();
+          this.ucmcancels[x]();
 
+      /* Delete Observer */
       if(this.observer)
         delete this.observer;
-        
+
+      /* Cleanup */
       delete this.cancels;
       delete this.ucmcancels;
       delete this.options;
@@ -125,13 +130,15 @@ global.simple_fortnite = (function(){
       ConfirmModal = WebpackModules.find(Filters.byPrototypeFields(['handleCancel', 'handleSubmit', 'handleMinorConfirm']));
       ConfirmModal.displayName = 'ConfirmModal';
 
+      NickHandler = WebpackModules.findByUniqueProperties(['getNickname']);
+     
       SubMenuItem = WebpackModules.findByDisplayName("SubMenuItem");
 
       // this became very unreliable in a recent discord update
-       ReactComponents.setName('MessageContextMenu',
+      /*ReactComponents.setName('MessageContextMenu',
         Filters.byCode(/\.ContextMenuTypes\.MESSAGE_MAIN\b[\s\S]*\.ContextMenuTypes\.MESSAGE_SYSTEM\b/,
         c => c.prototype && c.prototype.render)
-      );
+       );*/
 
       ModalsStack = WebpackModules.findByUniqueProperties(['push', 'update', 'pop', 'popWithKey']);
 
@@ -146,7 +153,7 @@ global.simple_fortnite = (function(){
 
       VoiceActions = WebpackModules.findByUniqueProperties(['selectVoiceChannel', 'clearVoiceChannel']);
       VoiceChannels = WebpackModules.findByDisplayName("GuildVoiceMoveToItem");
-
+      
       UploadModule = WebpackModules.findByUniqueProperties(['instantBatchUpload']);
 
       Parser = WebpackModules.findByUniqueProperties(["parserFor", "parse"]);
@@ -159,10 +166,10 @@ global.simple_fortnite = (function(){
             type: ContextMenuItemsGroup,
           },
           method: "append",
-          content: kfnObject => React.createElement(ContextMenuItem, {
+          content: uidObject => React.createElement(ContextMenuItem, {
             label: "Kick for Name",
             danger: true,
-            action: this.kickForName.bind(this, kfnObject.props.user)
+            action: this.kickForName.bind(this, uidObject.props.user, uidObject.props.guildId)
           })
         },
         {
@@ -170,10 +177,10 @@ global.simple_fortnite = (function(){
             type: ContextMenuItemsGroup,
           },
           method: "append",
-          content: bcuObject => React.createElement(ContextMenuItem, {
-            label: "BCheck User",
-            danger: true,
-            action: this.bCheckUser.bind(this, bcuObject.props.user)
+          content: uidObject => React.createElement(ContextMenuItem, {
+            label: "bCheck Username",
+            danger: false,
+            action: this.bcheckName.bind(this, uidObject.props.user, uidObject.props.guildId)
           })
         }
       ]));
@@ -232,11 +239,9 @@ global.simple_fortnite = (function(){
 
       // workaround
       this.observer = ({addedNodes}) => {
-        if(this.found)
-          return;
         for(let i = 0; i < addedNodes.length; i++) {
           let element = addedNodes[i];
-          if(element.classList && element.classList.contains("contextMenu-uoJTbz")) {
+          if(element.classList && element.classList.contains("contextMenu-HLZMGh")) {
             let component = getInstanceFromNode(element);
             if(!(component && (component = component.return.type))) continue;
             if("MessageContextMenu" === component.displayName || component.prototype && /\.ContextMenuTypes\.MESSAGE_MAIN\b[\s\S]*\.ContextMenuTypes\.MESSAGE_SYSTEM\b/.test(component.prototype.render)) {
@@ -403,12 +408,9 @@ global.simple_fortnite = (function(){
 
       //VoiceActions.selectVoiceChannel(channel.guild_id, "419254410363797519");
 
-      console.log("Load Prune Menu");
-      PruneRenderMenu.render();
+      console.log("Get Target Channels");
       //console.log({ d: VoiceChannels });
       //console.log(VoiceChannels.prototype.getTargetChannels());
-
-
     }
 
     modGoToVC(channel, message, e) {
@@ -544,22 +546,36 @@ global.simple_fortnite = (function(){
       });
     }
 
-    async kickForName(user, e) {
+    async kickForName(user, guild, e) {
       if(e)
         this.closeMenu(e);
 
       // Kick for name
       let modlogChl = "374987880592048128";
-      MessageActions.sendMessage(modlogChl, {content: `!warn kick ${user.id} Your username/nickname is in violation of Official Fornite Discord #rules. Please adhere to our guidelines, or your account may be banned.`, invalidEmojis: [], tts: false});
+      let nicktemp = NickHandler.getNickname(guild, modlogChl, user);
+      let nickname = (nicktemp != null) ? nicktemp : user.username;
+      MessageActions.sendMessage(modlogChl, {content: 
+        `!warn kick ${user.id} Your username/nickname, \`${nickname}\`, is in violation of Official Fornite Discord #rules. Please adhere to our guidelines, or your account may be banned.
+  \`\`\`fix
+⚠️ Keep your names readable and easy for other users to type out.
+  \n⚠️ Names must use standard unicode alphanumeric characters.
+  \n⚠️ Names should be no shorter in length than 3 alphanumerical characters.
+  \n⚠️ Spaces between singular characters should be avoided.
+  \n⚠️ Invisible names are not allowed.
+  \n⚠️ Emojis aside, no symbols that take up more than one line of text or are unreadable.\`\`\``, invalidEmojis: [], tts: false});
     }
 
-    async bCheckUser(user, e) {
-      if(e)
+    async bcheckName(user, guild, e){
+    if(e)
         this.closeMenu(e);
 
-      // BCheck
-      let modchatChl = "341265291814240257";
-      MessageActions.sendMessage(modchatChl, {content: `!bcheck 0 ${user.id}`, invalidEmojis: [], tts: false});
+
+      // Kick for name
+      let modlogCh2 = "341265291814240257";
+      
+      //let nickname = NickHandler.getNickname(guild, modlogCh2, user);
+      //console.log(nickname);
+      MessageActions.sendMessage(modlogCh2, {content: `!bcheck 0 ${user.id}`, invalidEmojis: [], tts: false});
     }
   }
 })();

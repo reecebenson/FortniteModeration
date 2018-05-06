@@ -182,6 +182,17 @@ global.simple_fortnite = (function(){
             danger: false,
             action: this.bcheckName.bind(this, uidObject.props.user, uidObject.props.guildId)
           })
+        },
+        {
+            selector: {
+                type: ContextMenuItemsGroup,
+            },
+            method: "append",
+                content: uidObject => React.createElement(ContextMenuItem, {
+            label: "!uinfo User",
+            danger: false,
+            action: this.getUinfo.bind(this, uidObject.props.user)
+        })
         }
       ]));
 
@@ -577,6 +588,19 @@ global.simple_fortnite = (function(){
       //console.log(nickname);
       MessageActions.sendMessage(modlogCh2, {content: `!bcheck 0 ${user.id}`, invalidEmojis: [], tts: false});
     }
+
+      async getUinfo(user, guild, e){
+          if(e)
+              this.closeMenu(e);
+
+
+          // Kick for name
+          let modlogCh2 = "341265291814240257";
+
+          //let nickname = NickHandler.getNickname(guild, modlogCh2, user);
+          //console.log(nickname);
+          MessageActions.sendMessage(modlogCh2, {content: `!uinfo ${user.id}`, invalidEmojis: [], tts: false});
+      }
   }
 })();
 

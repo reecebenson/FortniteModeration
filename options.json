@@ -3,10 +3,11 @@
         "name": "SimpleFornite",
         "authors": [
             "Simple#0001",
+            "Soulrift#0001",
             "samogot#4379",
             "square#3880"
         ],
-        "version": "1.2.0",
+        "version": "1.1.0",
         "description": "Enhances the moderation of the Fortnite Discord server."
     },
 

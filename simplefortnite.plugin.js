@@ -240,7 +240,7 @@ global.simple_fortnite = (function(){
     /*                  USER MENU FEATURES               */
     /*****************************************************/
 
-    modUserInfo(channel, message, e) {
+    modUserInfo(user, guild, e) {
       if(e)
         this.closeMenu(e);
       MessageActions.sendMessage(this.channels["international"]["modchat"], {content: `!uinfo ${message.author.id}`, invalidEmojis: [], tts: false});

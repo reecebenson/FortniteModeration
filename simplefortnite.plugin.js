@@ -27,7 +27,7 @@
 global.simple_fortnite = (function(){
   "use strict";
   var WebpackModules, ReactComponents, getOwnerInstance, React, Renderer, Filters, getInstanceFromNode, UploadModule, UserAdminItemGroup;
-  var NickHandler, ContextMenuActions, ContextMenuItemsGroup, ContextMenuItem, SubMenuItem, UserContextMenu, MessageContextMenu, ConfirmModal, ModalsStack, MessageActions, VoiceActions, Parser, MessageFileUpload, VoiceChannels;
+  var NickHandler, ContextMenuActions, ContextMenuItemsGroup, ContextMenuItem, SubMenuItem, UserContextMenu, MessageContextMenu, ConfirmModal, ModalsStack, MessageActions, VoiceActions, VoiceWhere, Parser, MessageFileUpload, VoiceChannels;
 
   return class SimpleFortnite {
     constructor() {
@@ -92,6 +92,45 @@ global.simple_fortnite = (function(){
       this.ucmcancels = [];
       this.options = null;
       this.optionsUrl = "https://raw.githubusercontent.com/reecebenson/FortniteModeration/master/options.json";
+      this.language_pack = "international";
+      this.languages = {
+        "international": {
+          "channels": {
+            "modchat": "341265291814240257",
+            "modlog": "374987880592048128"
+          }
+        },
+        "russian": {
+          "channels": {
+            "modchat": "",
+            "modlog": ""
+          }
+        },
+        "german": {
+          "channels": {
+            "modchat": "",
+            "modlog": ""
+          }
+        },
+        "french": {
+          "channels": {
+            "modchat": "",
+            "modlog": ""
+          }
+        },
+        "spanish": {
+          "channels": {
+            "modchat": "",
+            "modlog": ""
+          }
+        },
+        "turkish": {
+          "channels": {
+            "modchat": "",
+            "modlog": ""
+          }
+        }
+      }
 
       /* Initialise */
       this.loadAllModules();
@@ -105,13 +144,15 @@ global.simple_fortnite = (function(){
       for(let i = 0; i < this.cancels.length; i++)
         this.cancels[i]();
       for(let x = 0; x < this.ucmcancels.length; x++)
-          this.ucmcancels[x]();
+        this.ucmcancels[x]();
 
       /* Delete Observer */
       if(this.observer)
         delete this.observer;
 
       /* Cleanup */
+      delete this.language_pack;
+      delete this.languages;
       delete this.cancels;
       delete this.ucmcancels;
       delete this.options;
@@ -153,12 +194,115 @@ global.simple_fortnite = (function(){
 
       VoiceActions = WebpackModules.findByUniqueProperties(['selectVoiceChannel', 'clearVoiceChannel']);
       VoiceChannels = WebpackModules.findByDisplayName("GuildVoiceMoveToItem");
+      VoiceWhere = WebpackModules.findByUniqueProperties(['getVoiceStates', 'getCurrentVoiceChannelId', 'getVoiceStatesForChannel']);
       
       UploadModule = WebpackModules.findByUniqueProperties(['instantBatchUpload']);
 
       Parser = WebpackModules.findByUniqueProperties(["parserFor", "parse"]);
     }
     
+    /*****************************************************/
+    /*               MESSAGE MENU FEATURES               */
+    /*****************************************************/
+
+    async modKickUser(channel, message, e) {
+      if(e)
+        this.closeMenu(e);
+
+      //todo
+
+      let userNick = message.nick;
+      let userTag = message.author.tag;
+      let userInfo = userNick == null ? userTag : `${userNick} (${userTag})`;
+
+      ModalsStack.push(function(props) {
+        let br = () => React.createElement("br", null);
+        let boldname = () => React.createElement("strong", null, userInfo);
+        let textarea = () => React.createElement("textarea", {className: "inputDefault-Y_U37D input-2YozMi size16-3IvaX_ textArea-31DGOu scrollbarDefault-3oTVtP scrollbar-11WJwo", placeholder: `Reason for kicking ${userInfo}` });
+        return React.createElement(ConfirmModal, Object.assign({
+          title: `Kicking Member`,
+          body: React.createElement(React.Fragment, null,
+            `You're attempting to kick `, boldname(), `.`, br(), br(), textarea()
+          ),
+          confirmText: "Kick"
+        }, props));
+      });
+    }
+
+    modBanUser(channel, message, e) {
+      if(e)
+        this.closeMenu(e);
+
+      //todo
+    }
+
+    /*****************************************************/
+    /*                  USER MENU FEATURES               */
+    /*****************************************************/
+
+    modUserInfo(channel, message, e) {
+      if(e)
+        this.closeMenu(e);
+      MessageActions.sendMessage(this.channels["international"]["modchat"], {content: `!uinfo ${message.author.id}`, invalidEmojis: [], tts: false});
+    }
+
+    modKickForName(user, guild, e) {
+      if(e)
+        this.closeMenu(e);
+
+      // Kick for name
+      let nicktemp = NickHandler.getNickname(guild, this.getChannelID("modlog"), user);
+      let nickname = (nicktemp != null) ? nicktemp : user.username;
+      MessageActions.sendMessage(this.getChannelID("modlog"), {content: 
+        `!warn kick ${user.id} Your username/nickname, \`${nickname}\`, is in violation of Official Fornite Discord #rules. Please adhere to our guidelines, or your account may be banned.
+  \`\`\`fix
+⚠️ Keep your names readable and easy for other users to type out.
+  \n⚠️ Names must use standard unicode alphanumeric characters.
+  \n⚠️ Names should be no shorter in length than 3 alphanumerical characters.
+  \n⚠️ Spaces between singular characters should be avoided.
+  \n⚠️ Invisible names are not allowed.
+  \n⚠️ Emojis aside, no symbols that take up more than one line of text or are unreadable.\`\`\``, invalidEmojis: [], tts: false});
+    }
+
+    modBCheckUser(user, guild, e){
+      if(e)
+        this.closeMenu(e);
+      MessageActions.sendMessage(this.getChannelID("modchat"), {content: `!bcheck 0 ${user.id}`, invalidEmojis: [], tts: false});
+    }
+
+    modUserInfo(user, guild, e){
+      if(e)
+        this.closeMenu(e);
+      MessageActions.sendMessage(this.getChannelID("modchat"), {content: `!uinfo ${user.id}`, invalidEmojis: [], tts: false});
+    }
+
+    modGoToVC(user, guild, e) {
+      if(e)
+        this.closeMenu(e);
+
+      let nicktemp = NickHandler.getNickname(guild, this.getChannelID("modlog"), user);
+      let nickname = (nicktemp != null) ? nicktemp : user.username;
+      let vcId = VoiceWhere.getCurrentVoiceChannelId(guild, user.id);
+      if(vcId !== undefined)
+        VoiceActions.selectVoiceChannel(guild, vcId);
+      else
+        ModalsStack.push(function(props) {
+          let br = () => React.createElement("br", null);
+          let boldname = () => React.createElement("strong", null, nickname);
+          return React.createElement(ConfirmModal, Object.assign({
+            title: `Error`,
+            body: React.createElement(React.Fragment, null,
+              boldname(), ` is not in a voice channel.`
+            ),
+            confirmText: "Close"
+          }, props));
+        });
+    }
+
+    /*****************************************************/
+    /*                     UI PATCHES                    */
+    /*****************************************************/
+
     patchUserContextMenu() {
       let patchIt = () => this.ucmcancels.push(Renderer.patchRender(UserContextMenu, [
         {
@@ -169,7 +313,7 @@ global.simple_fortnite = (function(){
           content: uidObject => React.createElement(ContextMenuItem, {
             label: "Kick for Name",
             danger: true,
-            action: this.kickForName.bind(this, uidObject.props.user, uidObject.props.guildId)
+            action: this.modKickForName.bind(this, uidObject.props.user, uidObject.props.guildId)
           })
         },
         {
@@ -177,22 +321,11 @@ global.simple_fortnite = (function(){
             type: ContextMenuItemsGroup,
           },
           method: "append",
-          content: uidObject => React.createElement(ContextMenuItem, {
-            label: "bCheck Username",
-            danger: false,
-            action: this.bcheckName.bind(this, uidObject.props.user, uidObject.props.guildId)
+          content: uidObject => React.createElement(SubMenuItem, {
+            label: "Moderation",
+            render: () => this.renderUserModerationMenu(uidObject)
+            // invertChildY: true
           })
-        },
-        {
-            selector: {
-                type: ContextMenuItemsGroup,
-            },
-            method: "append",
-                content: uidObject => React.createElement(ContextMenuItem, {
-            label: "!uinfo User",
-            danger: false,
-            action: this.getUinfo.bind(this, uidObject.props.user)
-        })
         }
       ]));
 
@@ -227,16 +360,6 @@ global.simple_fortnite = (function(){
             render: () => this.renderModerationMenu(modObject)
             // invertChildY: true
           })
-        },
-        {
-          selector: {
-            type: ContextMenuItemsGroup,
-          },
-          method: "append",
-          content: uidObject => React.createElement(ContextMenuItem, {
-            label: "UID Mention",
-            action: this.idMention.bind(this, uidObject.props.channel, uidObject.props.message)
-          })
         }
       ]));
 
@@ -265,6 +388,10 @@ global.simple_fortnite = (function(){
         }
       };
     }
+
+    /*****************************************************/
+    /*                 MENU FUNCTIONALITY                */
+    /*****************************************************/
 
     renderMenu({props: {message, channel}}, parent) {
       let {menu} = this.options;
@@ -335,18 +462,6 @@ global.simple_fortnite = (function(){
           {
             label: "Ban",
             action: this.modBanUser.bind(this, channel, message)
-          },
-          {
-            label: "User Information",
-            action: this.modUserInfo.bind(this, channel, message)
-          },
-          {
-            label: "Go to Voice Channel",
-            action: this.modGoToVC.bind(this, channel, message)
-          },
-          {
-            label: "Test",
-            action: this.testFunc.bind(this, channel, message)
           }
         ];
       }})();
@@ -354,6 +469,67 @@ global.simple_fortnite = (function(){
       let ret = elements.map(e => { return React.createElement(e.render ? SubMenuItem : ContextMenuItem, e); });
       return ret;
     }
+
+    renderUserModerationMenu({props: {user, guildId}}, category) {
+      var elements = (() => { switch(category) {
+        default: return [
+          {
+            label: "Check User Logs",
+            action: this.modBCheckUser.bind(this, user, guildId)
+          },
+          {
+            label: "User Information",
+            action: this.modUserInfo.bind(this, user, guildId)
+          },
+          {
+            label: "Go to VC",
+            action: this.modGoToVC.bind(this, user, guildId)
+          }
+        ]
+      }})();
+
+      let ret = elements.map(e => { return React.createElement(e.render ? SubMenuItem : ContextMenuItem, e); });
+      return ret;
+    }
+
+    closeMenu(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      ContextMenuActions.closeContextMenu();
+    }
+
+    sendMessage(channel, text) {
+      let {identifiers} = this.options;
+
+      Object.keys(identifiers).forEach(identifier => {
+        text = text.replace(`%${identifier}%`, identifiers[identifier]);
+      });
+
+      MessageActions.sendMessage(channel.id, {content: text, invalidEmojis: [], tts: false});
+    }
+
+    processCommand() {
+      return this.sendMessage(...arguments);
+    }
+
+    respond(channel, message, response, mention, exec, event) {
+      this.closeMenu(event);
+
+      if(exec)
+        this.processCommand(channel, exec);
+
+      if(response) {
+        if(mention) response = `<@!${message.author.id}>, ${response}`;
+        this.sendMessage(channel, response);
+      }
+    }
+
+    /*****************************************************/
+    /*            SCREENSHOTTING CAPABILITIES            */
+    /*****************************************************/
+
+    // refer to: https://stackoverflow.com/questions/42519933/select-a-region-of-desktop-screen-with-electron
+    // work around on how to use this to draw rectangles, and select portions of the screen to crop screenshot image
 
     takeScreenshot(callback) {
       const {desktopCapturer, screen} = require('electron');
@@ -375,56 +551,17 @@ global.simple_fortnite = (function(){
       });
     }
 
-    async modKickUser(channel, message, e) {
-      if(e)
-        this.closeMenu(e);
-
-      let userNick = message.nick;
-      let userTag = message.author.tag;
-      let userInfo = userNick == null ? userTag : `${userNick} (${userTag})`;
-      console.log(message);
-
-      ModalsStack.push(function(props) {
-        let br = () => React.createElement("br", null);
-        let boldname = () => React.createElement("strong", null, userInfo);
-        let textarea = () => React.createElement("textarea", {className: "inputDefault-Y_U37D input-2YozMi size16-3IvaX_ textArea-31DGOu scrollbarDefault-3oTVtP scrollbar-11WJwo", placeholder: `Reason for kicking ${userInfo}` });
-        return React.createElement(ConfirmModal, Object.assign({
-          title: `Kicking Member`,
-          body: React.createElement(React.Fragment, null,
-            `You're attempting to kick `, boldname(), `.`, br(), br(), textarea()
-          ),
-          confirmText: "Kick"
-        }, props));
-      });
+    getImageDimensions(file) {
+      return new Promise (function (resolved, rejected) {
+        var i = new Image()
+        i.onload = function(){
+          resolved({width: i.width, height: i.height})
+        };
+        i.src = file
+      })
     }
 
-    modBanUser(channel, message, e) {
-      if(e)
-        this.closeMenu(e);
-
-    }
-
-    modUserInfo(channel, message, e) {
-      if(e)
-        this.closeMenu(e);
-
-      // User Information Channel
-      let uinfoChl = "341265291814240257";
-      MessageActions.sendMessage(uinfoChl, {content: `!uinfo ${message.author.id}`, invalidEmojis: [], tts: false});
-    }
-
-    testFunc(channel, message, e) {
-      if(e)
-        this.closeMenu(e);
-
-      //VoiceActions.selectVoiceChannel(channel.guild_id, "419254410363797519");
-
-      console.log("Get Target Channels");
-      //console.log({ d: VoiceChannels });
-      //console.log(VoiceChannels.prototype.getTargetChannels());
-    }
-
-    modGoToVC(channel, message, e) {
+    menu_takeScreenshot(channel, message, e) {
       if(e)
         this.closeMenu(e);
 
@@ -443,62 +580,19 @@ global.simple_fortnite = (function(){
 
         MessageActions._sendMessage(channel.id, {content: "Image Test", invalidEmojis: [], tts: false });
         UploadModule.instantBatchUpload(channel.id, [new File([ssData.png], "simplefortnite-image.png", {type:"PNG"})]);
-        //console.log(MessageActions);
-        //console.log(MessageActions.sendMessage);
       }, "image/png");
     }
 
-    getImageDimensions(file) {
-      return new Promise (function (resolved, rejected) {
-        var i = new Image()
-        i.onload = function(){
-          resolved({width: i.width, height: i.height})
-        };
-        i.src = file
-      })
-    }
+    /*****************************************************/
+    /*                  VERSION CONTROL                  */
+    /*****************************************************/
 
-    closeMenu(event) {
-      event.preventDefault();
-      event.stopPropagation();
-      ContextMenuActions.closeContextMenu();
-    }
-
-    respond(channel, message, response, mention, exec, event) {
-      this.closeMenu(event);
-
-      if(exec)
-        this.processCommand(channel, exec);
-
-      if(response) {
-        if(mention) response = `<@!${message.author.id}>, ${response}`;
-        this.sendMessage(channel, response);
-      }
-    }
-
-    requestJson(url) {
-      return new Promise((resolve, reject) => {
-        require("request")(url, (err, {statusCode}, body) => {
-          if(err || 200 !== statusCode) return reject(err || new Error("Request failed with status ${statusCode}."));
-          resolve(JSON.parse(body));
-        });
-      });
-    }
-
-    processCommand() {
-      return this.sendMessage(...arguments);
-    }
-
-    sendMessage(channel, text) {
-      let {identifiers} = this.options;
-
-      Object.keys(identifiers).forEach(identifier => {
-        text = text.replace(`%${identifier}%`, identifiers[identifier]);
-      });
-
-      MessageActions.sendMessage(channel.id, {content: text, invalidEmojis: [], tts: false});
-    }
-
+    /**
+     * TODO: Update this function to update file contents on pressing "Okay"
+     * ? - check for RNM plugin so that it auto reloads, otherwise ask Square if its okay
+     *     to use that logic from his plugin to force a reload so user mods dont have to
+     *     have a plugin running in the background for no reason
+     */
     async requestAndSetOptions(event) {
       if(event)
         this.closeMenu(event);
@@ -525,10 +619,19 @@ global.simple_fortnite = (function(){
               React.cloneElement(Parser.parse(`<@!${simple}>`)[0], {preventCloseFromModal: true}),   // <- still needs some work lol
               " to get it! :)"
             ),
-            confirmText: "Oki Doki"
+            confirmText: "Okay"
           }, props));
         });
       }
+    }
+
+    requestJson(url) {
+      return new Promise((resolve, reject) => {
+        require("request")(url, (err, {statusCode}, body) => {
+          if(err || 200 !== statusCode) return reject(err || new Error("Request failed with status ${statusCode}."));
+          resolve(JSON.parse(body));
+        });
+      });
     }
 
     semverCompare(v1, v2) {
@@ -544,63 +647,21 @@ global.simple_fortnite = (function(){
       return 0;
     }
 
-    async idMention(channel, message, e) {
+    /*****************************************************/
+    /*                 LANGUAGE  CONTROL                 */
+    /*****************************************************/
+
+    getChannelID(chl) {
+      return ((chl in this.languages[this.language_pack]["channels"]) ? this.languages[this.language_pack]["channels"][chl] : null);
+    }
+
+    /*****************************************************/
+    /*                      TESTING                      */
+    /*****************************************************/
+    testFunc(channel, message, e) {
       if(e)
         this.closeMenu(e);
-
-      let textarea = document.querySelector(".chat textarea");
-      let channelTextAreaForm = getOwnerInstance(textarea, {include: ["ChannelTextAreaForm"]});
-      let oldText = channelTextAreaForm.state.textValue;
-
-      await channelTextAreaForm.setState({
-        textValue: oldText + `<@!${message.author.id}> `
-      });
     }
-
-    async kickForName(user, guild, e) {
-      if(e)
-        this.closeMenu(e);
-
-      // Kick for name
-      let modlogChl = "374987880592048128";
-      let nicktemp = NickHandler.getNickname(guild, modlogChl, user);
-      let nickname = (nicktemp != null) ? nicktemp : user.username;
-      MessageActions.sendMessage(modlogChl, {content: 
-        `!warn kick ${user.id} Your username/nickname, \`${nickname}\`, is in violation of Official Fornite Discord #rules. Please adhere to our guidelines, or your account may be banned.
-  \`\`\`fix
-⚠️ Keep your names readable and easy for other users to type out.
-  \n⚠️ Names must use standard unicode alphanumeric characters.
-  \n⚠️ Names should be no shorter in length than 3 alphanumerical characters.
-  \n⚠️ Spaces between singular characters should be avoided.
-  \n⚠️ Invisible names are not allowed.
-  \n⚠️ Emojis aside, no symbols that take up more than one line of text or are unreadable.\`\`\``, invalidEmojis: [], tts: false});
-    }
-
-    async bcheckName(user, guild, e){
-    if(e)
-        this.closeMenu(e);
-
-
-      // Kick for name
-      let modlogCh2 = "341265291814240257";
-      
-      //let nickname = NickHandler.getNickname(guild, modlogCh2, user);
-      //console.log(nickname);
-      MessageActions.sendMessage(modlogCh2, {content: `!bcheck 0 ${user.id}`, invalidEmojis: [], tts: false});
-    }
-
-      async getUinfo(user, guild, e){
-          if(e)
-              this.closeMenu(e);
-
-
-          // Kick for name
-          let modlogCh2 = "341265291814240257";
-
-          //let nickname = NickHandler.getNickname(guild, modlogCh2, user);
-          //console.log(nickname);
-          MessageActions.sendMessage(modlogCh2, {content: `!uinfo ${user.id}`, invalidEmojis: [], tts: false});
-      }
   }
 })();
 

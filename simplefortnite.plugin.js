@@ -142,9 +142,11 @@ global.simple_fortnite = (function(){
     stop() {
       /* Unpatch Renders */
       for(let i = 0; i < this.cancels.length; i++)
-        this.cancels[i]();
+        if(this.cancels[i]())
+          this.cancels[i]();
       for(let x = 0; x < this.ucmcancels.length; x++)
-        this.ucmcancels[x]();
+        if(this.ucmcancels[x])
+          this.ucmcancels[x]();
 
       /* Delete Observer */
       if(this.observer)

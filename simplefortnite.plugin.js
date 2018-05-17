@@ -1,5 +1,11 @@
 //META{"name":"simple_fortnite"}*//
 
+//TODO:
+// update options.json for channel indentifiers to be region (guild id) locked
+// update menu labels dependent on server selection (i.e. jump from English to German)
+// code for auto updating when file version changes - snippet from RNM?
+// clean up
+
 /*@cc_on
 @if (@_jscript)
 
@@ -65,7 +71,7 @@ global.simple_fortnite = (function(){
     }
 
     getVersion() {
-      return "2.0.0";
+      return "2.0.1";
     }
 
     load() {}
@@ -97,36 +103,42 @@ global.simple_fortnite = (function(){
         "international": {
           "channels": {
             "modchat": "341265291814240257",
+            "botspam": "446492143578775573",
             "modlog": "374987880592048128"
           }
         },
         "russian": {
           "channels": {
             "modchat": "",
+            "botspam": "",
             "modlog": ""
           }
         },
         "german": {
           "channels": {
             "modchat": "",
+            "botspam": "",
             "modlog": ""
           }
         },
         "french": {
           "channels": {
             "modchat": "",
+            "botspam": "",
             "modlog": ""
           }
         },
         "spanish": {
           "channels": {
             "modchat": "",
+            "botspam": "",
             "modlog": ""
           }
         },
         "turkish": {
           "channels": {
             "modchat": "",
+            "botspam": "",
             "modlog": ""
           }
         }
@@ -242,12 +254,6 @@ global.simple_fortnite = (function(){
     /*                  USER MENU FEATURES               */
     /*****************************************************/
 
-    modUserInfo(user, guild, e) {
-      if(e)
-        this.closeMenu(e);
-      MessageActions.sendMessage(this.channels["international"]["modchat"], {content: `!uinfo ${message.author.id}`, invalidEmojis: [], tts: false});
-    }
-
     modKickForName(user, guild, e) {
       if(e)
         this.closeMenu(e);
@@ -269,13 +275,13 @@ global.simple_fortnite = (function(){
     modBCheckUser(user, guild, e){
       if(e)
         this.closeMenu(e);
-      MessageActions.sendMessage(this.getChannelID("modchat"), {content: `!bcheck 0 ${user.id}`, invalidEmojis: [], tts: false});
+      MessageActions.sendMessage(this.getChannelID("botspam"), {content: `!bcheck 0 ${user.id}`, invalidEmojis: [], tts: false});
     }
 
     modUserInfo(user, guild, e){
       if(e)
         this.closeMenu(e);
-      MessageActions.sendMessage(this.getChannelID("modchat"), {content: `!uinfo ${user.id}`, invalidEmojis: [], tts: false});
+      MessageActions.sendMessage(this.getChannelID("botspam"), {content: `!uinfo ${user.id}`, invalidEmojis: [], tts: false});
     }
 
     modGoToVC(user, guild, e) {

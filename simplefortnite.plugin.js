@@ -275,7 +275,7 @@ global.simple_fortnite = (function(){
     modBCheckUser(user, guild, e){
       if(e)
         this.closeMenu(e);
-      MessageActions.sendMessage(this.getChannelID("botspam"), {content: `!bcheck 0 ${user.id}`, invalidEmojis: [], tts: false});
+      MessageActions.sendMessage(this.getChannelID("botspam"), {content: `!bcheck ${user.id}`, invalidEmojis: [], tts: false});
     }
 
     modUserInfo(user, guild, e){
